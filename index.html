@@ -154,25 +154,18 @@
   }
   .note-textarea:focus { border-color: var(--brass-bright); }
 
-  .wrap { width:100%; max-width:980px; margin:0 auto; padding:clamp(16px,3vw,32px) clamp(12px,4vw,28px) 56px; }
-  .card,.row > *,.share-row,.guess-value { min-width:0; }
-  .tabs { position:sticky; top:0; z-index:10; background:var(--ink); }
-  .split { grid-template-columns:repeat(2,minmax(0,1fr)); }
-  .guess-value { overflow-wrap:anywhere; }
-  .guess-result { flex-shrink:0; }
-  @media (max-width:760px){ .wrap{max-width:720px;} .split{grid-template-columns:1fr;} .card{padding:16px;} .title-row{gap:8px;flex-wrap:wrap;} h1,.title-code{font-size:clamp(23px,6vw,28px);} .subtitle{font-size:13px;} }
-  @media (max-width:520px){
-    .wrap{padding:14px 10px 40px;} header{margin-bottom:16px;} .tabs{margin-bottom:16px;} .tab{padding:10px 3px;font-size:12px;}
-    .card{padding:13px;margin-bottom:12px;} .card-label{margin-bottom:9px;} p.desc{font-size:13px;line-height:1.6;margin-bottom:12px;}
-    input[type=text],input[type=password]{font-size:clamp(18px,6vw,22px);letter-spacing:clamp(.14em,2.5vw,.3em);padding:11px 8px;}
-    input::placeholder{font-size:14px;} .btn{font-size:14px;padding:11px 12px;} .row{gap:7px;} .share-row{gap:6px;} .copy-btn{padding:0 9px;font-size:12px;}
-    .guess-row{gap:6px;padding:8px 7px;} .guess-num{width:22px;font-size:11px;} .guess-value{font-size:clamp(15px,5vw,18px);letter-spacing:.1em;} .guess-result{font-size:12px;}
-    .length-picker{gap:5px;} .length-btn{min-width:32px;padding:10px 0;font-size:14px;} .digit-tracker{gap:4px;} .digit-chip{min-width:26px;height:34px;font-size:14px;}
-    .status-line{gap:8px;align-items:flex-start;} .status-line > span:first-child{min-width:0;} .secret-top-badge{padding:2px 7px;gap:4px;} .secret-top-label{font-size:10px;} .secret-top-val{font-size:13px;letter-spacing:.08em;}
-    .turn-banner{padding:9px 8px;font-size:12px;text-align:center;} .player-badge{max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;} .note-textarea{font-size:13px;min-height:54px;}
-    .row:has(input[placeholder*=房號]){flex-direction:column;} .row:has(input[placeholder*=房號]) .btn{width:100%!important;padding:11px 12px!important;} .hint,.rules-body{overflow-wrap:anywhere;}
+  @media (max-width: 600px) {
+    .wrap { padding: 20px 12px 48px; }
+    .split { grid-template-columns: 1fr; }
+    .tabs { gap: 2px; }
+    .tab { padding: 11px 4px; font-size: 13px; }
+    .card { padding: 16px; }
+    .title-row { gap: 8px; flex-wrap: wrap; }
+    h1, .title-code { font-size: 25px; }
+    input[type="text"], input[type="password"] { font-size: 20px; }
+    .guess-row { gap: 7px; padding: 9px 8px; }
+    .guess-value { font-size: 16px; }
   }
-  @media (max-width:360px){ .wrap{padding-left:7px;padding-right:7px;} .tab{font-size:11px;} .card{padding:11px;} .guess-row{gap:4px;padding:7px 5px;} .guess-num{width:19px;} .guess-result{font-size:11px;} .digit-chip{min-width:24px;} }
 </style>
 </head>
 <body>
