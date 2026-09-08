@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
-<title>1A2B 猜數字</title>
+<title>1A2B</title>
 <style>
   :root {
     --ink: #16181d;
@@ -141,7 +141,9 @@
     color: #8ed680; border-color: #7a9a6f; background: rgba(122, 154, 111, 0.2);
     box-shadow: 0 0 6px rgba(122, 154, 111, 0.25);
   }
-  .digit-tracker-legend {
+  .guess-digit { display:inline-block; transition: opacity .15s ease, color .15s ease, filter .15s ease; }
+.guess-digit.eliminated { opacity:.28; color:var(--paper-dim); filter:grayscale(1); }
+.digit-tracker-legend {
     display: flex; justify-content: space-between; align-items: center;
     font-size: 11px; color: #757983; margin-bottom: 8px;
   }
@@ -263,12 +265,13 @@
       </div>
       <div class="card" id="duel-secret-card">
         <div class="card-label" id="duel-secret-label">你的密碼（選擇位數後設定）</div>
-        <input type="password" id="duel-secret-input" inputmode="numeric" maxlength="4" placeholder="0000" autocomplete="off">
+        <input type="text" id="duel-secret-input" inputmode="numeric" maxlength="4" placeholder="0000" autocomplete="off">
         <button class="btn" id="duel-secret-submit">鎖定密碼</button>
         <div class="error-msg" id="duel-secret-error"></div>
       </div>
       <div id="duel-play" style="display:none;">
         <div id="duel-win" style="display:none;" class="win-banner"></div>
+        <button class="btn" id="duel-replay" style="display:none; margin-bottom:12px;">再玩一局（保留房間）</button>
         
         <div id="duel-turn-banner" class="turn-banner turn-my">
           <span class="lamp" id="duel-banner-lamp"></span>
@@ -345,12 +348,12 @@
         <div class="length-picker" id="host-length-picker"></div>
         <div class="error-msg" id="host-length-error"></div>
       </div>
-      <div class="card" id="host-secret-card" style="display:none;">
+      <div class="card" id="host-secret-card">
         <div class="card-label" id="host-secret-label">設定題目（不重複數字）</div>
-        <input type="password" id="host-secret-input" inputmode="numeric" maxlength="4" placeholder="0000" autocomplete="off">
+        <input type="text" id="host-secret-input" inputmode="numeric" maxlength="4" placeholder="0000" autocomplete="off">
         <button class="btn" id="host-secret-submit">出題</button>
         <div class="error-msg" id="host-secret-error"></div>
-        <div class="hint">出題後題目會被鎖定，直到你離開房間為止。</div>
+        <div class="hint">出題後題目會被鎖定；本局結束後可直接「再出一題」，不用重新建立房間。</div>
       </div>
       <div class="card" id="host-owner-board" style="display:none;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
@@ -370,6 +373,7 @@
         </div>
       </div>
       <div id="host-win" style="display:none;" class="win-banner"></div>
+      <button class="btn" id="host-replay" style="display:none; margin-bottom:12px;">再出一題（保留房間）</button>
       <div class="card" id="host-guess-card" style="display:none;">
         <div class="card-label" id="host-guess-label">輸入你的猜測</div>
         <input type="text" id="host-guess-input" inputmode="numeric" maxlength="4" placeholder="0000">
@@ -446,17 +450,30 @@
     return String(value == null ? '' : value).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
   }
 
-  function renderGuessRow(idx, guessStr, a, b) {
-    return `<div class="guess-row"><span class="guess-num">#${idx}</span><span class="guess-value digits">${guessStr}</span><span class="guess-result"><span class="result-a">${a}A</span> <span class="result-b">${b}B</span></span></div>`;
+  function getEliminatedDigits(containerId) {
+    const container = document.getElementById(containerId);
+    const set = new Set();
+    if (!container) return set;
+    container.querySelectorAll('.digit-chip.state-eliminated').forEach(chip => set.add(chip.textContent.trim()));
+    return set;
+  }
+
+  function renderGuessDigits(guessStr, eliminated) {
+    return String(guessStr).split('').map(d => `<span class="guess-digit${eliminated.has(d) ? ' eliminated' : ''}" data-digit="${d}">${d}</span>`).join('');
+  }
+
+  function renderGuessRow(idx, guessStr, a, b, eliminated = new Set()) {
+    return `<div class="guess-row"><span class="guess-num">#${idx}</span><span class="guess-value digits">${renderGuessDigits(guessStr, eliminated)}</span><span class="guess-result"><span class="result-a">${a}A</span> <span class="result-b">${b}B</span></span></div>`;
   }
 
   function renderOtherGuessRow(idx, name, guessStr, a, b) {
-    return `<div class="guess-row"><span class="guess-num">#${idx}</span><span class="player-badge" style="max-width:85px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${escapeHtml(name)}">${escapeHtml(name)}</span><span class="guess-value digits">${guessStr}</span><span class="guess-result"><span class="result-a">${a}A</span> <span class="result-b">${b}B</span></span></div>`;
+    return `<div class="guess-row"><span class="guess-num">#${idx}</span><span class="player-badge" style="max-width:85px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${escapeHtml(name)}">${escapeHtml(name)}</span><span class="guess-value digits">${renderGuessDigits(guessStr, new Set())}</span><span class="guess-result"><span class="result-a">${a}A</span> <span class="result-b">${b}B</span></span></div>`;
   }
 
-  function renderHistory(el, list) {
+  function renderHistory(el, list, trackerId) {
     if (!list || list.length === 0) { el.innerHTML = ''; return; }
-    el.innerHTML = list.map((g, i) => renderGuessRow(i + 1, g.guess, g.a, g.b)).join('');
+    const eliminated = trackerId ? getEliminatedDigits(trackerId) : new Set();
+    el.innerHTML = list.map((g, i) => renderGuessRow(i + 1, g.guess, g.a, g.b, eliminated)).join('');
   }
 
   function renderOthersHistory(el, list) {
@@ -490,7 +507,7 @@
     return false;
   }
 
-  function setupDigitTracker(containerId, resetBtnId) {
+  function setupDigitTracker(containerId, resetBtnId, onChange) {
     const container = document.getElementById(containerId);
     if (!container) return;
     container.innerHTML = '';
@@ -502,22 +519,23 @@
       chip.addEventListener('click', () => {
         state = (state + 1) % 3;
         chip.className = 'digit-chip' + (state === 1 ? ' state-eliminated' : state === 2 ? ' state-confirmed' : '');
+        if (onChange) onChange();
       });
       container.appendChild(chip);
     }
     const resetBtn = document.getElementById(resetBtnId);
     if (resetBtn) {
-      resetBtn.addEventListener('click', () => {
-        container.querySelectorAll('.digit-chip').forEach(c => {
-          c.className = 'digit-chip';
-        });
-      });
+      resetBtn.onclick = () => {
+        container.querySelectorAll('.digit-chip').forEach(c => { c.className = 'digit-chip'; });
+        if (onChange) onChange();
+      };
     }
   }
 
-  setupDigitTracker('solo-digit-tracker', 'solo-notes-reset');
-  setupDigitTracker('duel-digit-tracker', 'duel-notes-reset');
-  setupDigitTracker('host-digit-tracker', 'host-notes-reset');
+
+  setupDigitTracker('solo-digit-tracker', 'solo-notes-reset', () => updateSoloUI());
+  setupDigitTracker('duel-digit-tracker', 'duel-notes-reset', () => updateDuelUI());
+  setupDigitTracker('host-digit-tracker', 'host-notes-reset', () => updateHostGuesserUI());
 
   document.querySelectorAll('.tab').forEach(tab => {
     tab.addEventListener('click', () => {
@@ -566,7 +584,7 @@
     setText('solo-guess-label', `請輸入你的猜測（${solo.length} 位）`);
     setText('solo-length-badge', `${solo.length} 位數`);
     setText('solo-status-text', solo.won ? '挑戰完成' : `電腦已出好 ${solo.length} 位數題目`);
-    renderHistory(document.getElementById('solo-history'), solo.history);
+    renderHistory(document.getElementById('solo-history'), solo.history, 'solo-digit-tracker');
     document.getElementById('solo-empty').style.display = solo.history.length ? 'none' : 'block';
     if (solo.won) {
       win.style.display = 'block';
@@ -585,7 +603,7 @@
     document.getElementById('solo-guess-input').value = '';
     document.getElementById('solo-guess-error').textContent = '';
     document.getElementById('solo-notes-text').value = '';
-    setupDigitTracker('solo-digit-tracker', 'solo-notes-reset');
+    setupDigitTracker('solo-digit-tracker', 'solo-notes-reset', () => updateSoloUI());
     updateSoloUI();
     document.getElementById('solo-guess-input').focus();
   }
@@ -670,7 +688,7 @@
       topBadge.style.display = 'none';
     }
 
-    renderHistory(document.getElementById('duel-my-history'), duel.myHistory);
+    renderHistory(document.getElementById('duel-my-history'), duel.myHistory, 'duel-digit-tracker');
     renderHistory(document.getElementById('duel-their-history'), duel.theirHistory);
 
     const isMyTurn = (duel.currentTurn === duel.role);
@@ -720,10 +738,15 @@
     }
 
     const win = document.getElementById('duel-win');
+    const replay = document.getElementById('duel-replay');
     if (duel.winner) {
       win.style.display = 'block';
       win.textContent = duel.winner === 'me' ? '🎉 你贏了！你猜中了對方的密碼。' : (duel.winner === 'draw' ? '平手！雙方同時答對。' : `對方猜中你的密碼了：${duel.mySecret}`);
-    } else win.style.display = 'none';
+      replay.style.display = 'block';
+    } else {
+      win.style.display = 'none';
+      replay.style.display = 'none';
+    }
   }
 
   function bindDuelConnection(conn) {
@@ -736,6 +759,12 @@
       if (!data || typeof data !== 'object') return;
       if (data.type === 'config') {
         duel.length = data.length;
+      } else if (data.type === 'roundReset') {
+        duel.mySecret = null; duel.mySecretReady = false; duel.oppSecretReady = false;
+        duel.myHistory = []; duel.theirHistory = []; duel.winner = null; duel.currentTurn = 'a';
+        document.getElementById('duel-guess-error').textContent = '';
+        document.getElementById('duel-notes-text').value = '';
+        setupDigitTracker('duel-digit-tracker', 'duel-notes-reset', () => updateDuelUI());
       } else if (data.type === 'hello') {
         duel.oppName = data.name || '對手';
         if (data.length && !duel.length) { duel.length = data.length; }
@@ -876,6 +905,23 @@
 
   document.getElementById('duel-guess-submit').addEventListener('click', handleDuelGuessSubmit);
 
+  function duelStartNextRound() {
+    if (!duel.conn || !duel.conn.open || !duel.length) return;
+    duel.mySecret = null; duel.mySecretReady = false; duel.oppSecretReady = false;
+    duel.myHistory = []; duel.theirHistory = []; duel.winner = null; duel.currentTurn = 'a';
+    document.getElementById('duel-secret-input').value = '';
+    document.getElementById('duel-guess-input').value = '';
+    document.getElementById('duel-guess-error').textContent = '';
+    document.getElementById('duel-secret-error').textContent = '';
+    document.getElementById('duel-notes-text').value = '';
+    setupDigitTracker('duel-digit-tracker', 'duel-notes-reset', () => updateDuelUI());
+    duel.conn.send({ type:'roundReset' });
+    updateDuelUI();
+    document.getElementById('duel-secret-input').focus();
+  }
+
+  document.getElementById('duel-replay').addEventListener('click', duelStartNextRound);
+
   document.getElementById('duel-leave').addEventListener('click', () => {
     duelResetState(); duelGameEl.style.display = 'none'; duelSetupEl.style.display = 'block';
     document.getElementById('duel-secret-input').value = ''; document.getElementById('duel-guess-input').value = '';
@@ -884,7 +930,7 @@
     document.getElementById('duel-win').style.display = 'none';
     document.getElementById('duel-secret-badge-top').style.display = 'none';
     document.getElementById('duel-notes-text').value = '';
-    setupDigitTracker('duel-digit-tracker', 'duel-notes-reset');
+    setupDigitTracker('duel-digit-tracker', 'duel-notes-reset', () => updateDuelUI());
   });
 
   document.getElementById('duel-copy').addEventListener('click', () => copyText(duel.roomCode, document.getElementById('duel-copy')));
@@ -953,6 +999,9 @@
       setText('host-board-secret-code', host.secret);
     }
 
+    const replay = document.getElementById('host-replay');
+    replay.style.display = host.winner ? 'block' : 'none';
+
     const hist = document.getElementById('host-owner-history'), empty = document.getElementById('host-owner-empty');
     if (!host.allGuesses.length) {
       hist.innerHTML = ''; empty.style.display = 'block';
@@ -996,7 +1045,7 @@
     const my = document.getElementById('host-my-history'), myEmpty = document.getElementById('host-my-empty');
     if (host.myHistory.length) {
       myEmpty.style.display = 'none';
-      renderHistory(my, host.myHistory);
+      renderHistory(my, host.myHistory, 'host-digit-tracker');
     } else {
       myEmpty.style.display = 'block'; my.innerHTML = '';
     }
@@ -1052,7 +1101,7 @@
   }
 
   function hostChooseLength(n) {
-    host.length = n; host.secret = null; host.winner = null;
+    host.length = n; host.secret = null; host.winner = null; host.allGuesses = [];
     broadcastHost({type:'config', length:n, ready:false, winner:null});
     updateHostOwnerUI();
   }
@@ -1074,7 +1123,14 @@
       conn.on('data', data => {
         if (!data || typeof data !== 'object') return;
         if (data.type === 'config') {
-          host.length = data.length; host.secret = data.ready ? true : null; if (data.winner) host.winner = data.winner;
+          const wasRoundReset = !data.ready && !data.winner;
+          host.length = data.length; host.secret = data.ready ? true : null; host.winner = data.winner || null;
+          if (wasRoundReset) {
+            host.myHistory = []; host.othersHistory = [];
+            document.getElementById('host-guess-error').textContent = '';
+            document.getElementById('host-notes-text').value = '';
+            setupDigitTracker('host-digit-tracker', 'host-notes-reset', () => updateHostGuesserUI());
+          }
         } else if (data.type === 'guessResult') {
           host.myHistory.push({guess:data.guess, a:data.a, b:data.b});
         } else if (data.type === 'guessBroadcast' && data.playerId !== host.myId) {
@@ -1094,10 +1150,22 @@
   document.getElementById('host-create').addEventListener('click', hostCreateRoom);
   document.getElementById('host-join').addEventListener('click', hostJoinRoom);
 
+  function hostStartNextRound() {
+    if (!host.isOwner || !host.length) return;
+    host.secret = null; host.winner = null; host.allGuesses = [];
+    broadcastHost({type:'config', length:host.length, ready:false, winner:null});
+    updateHostOwnerUI();
+    document.getElementById('host-secret-input').value = '';
+    document.getElementById('host-secret-error').textContent = '';
+    document.getElementById('host-secret-input').focus();
+  }
+
+  document.getElementById('host-replay').addEventListener('click', hostStartNextRound);
+
   document.getElementById('host-secret-submit').addEventListener('click', () => {
     const input = document.getElementById('host-secret-input'), errEl = document.getElementById('host-secret-error'), val = input.value.trim(); errEl.textContent = '';
     if (!host.length || !isValidCode(val, host.length)) { errEl.textContent = `請輸入 ${host.length||4} 位不重複的數字。`; return; }
-    host.secret = val; input.value = '';
+    host.secret = val; host.winner = null; host.allGuesses = []; input.value = '';
     broadcastHost({type:'config', length:host.length, ready:true, winner:null});
     updateHostOwnerUI();
   });
@@ -1123,7 +1191,7 @@
     document.getElementById('host-owner-history').innerHTML = ''; document.getElementById('host-my-history').innerHTML = ''; document.getElementById('host-others-history').innerHTML = '';
     document.getElementById('host-win').style.display = 'none'; document.getElementById('host-secret-input').value = ''; document.getElementById('host-guess-input').value = '';
     document.getElementById('host-notes-text').value = '';
-    setupDigitTracker('host-digit-tracker', 'host-notes-reset');
+    setupDigitTracker('host-digit-tracker', 'host-notes-reset', () => updateHostGuesserUI());
   }
 
   document.getElementById('host-owner-leave').addEventListener('click', resetHostUI);
