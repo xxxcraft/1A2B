@@ -124,13 +124,13 @@
   .secret-top-label { font-size: 11px; color: var(--paper-dim); font-weight: 700; }
   .secret-top-val { color: var(--brass-bright); font-size: 16px; font-weight: 700; letter-spacing: 0.15em; }
 
-  .digit-tracker { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+  .digit-tracker { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 4px; margin-bottom: 10px; }
   .digit-chip {
-    flex: 1 1 28px; min-width: 28px; height: 36px; border-radius: 3px;
+    width: 100%; min-width: 0; height: 32px; border-radius: 3px;
     background: var(--ink); border: 1px solid var(--line); color: var(--paper);
-    font-family: "SF Mono", "Menlo", "Consolas", monospace; font-size: 15px; font-weight: 700;
+    font-family: "SF Mono", "Menlo", "Consolas", monospace; font-size: clamp(9px, 2.6vw, 15px); font-weight: 700;
     display: flex; align-items: center; justify-content: center; cursor: pointer; user-select: none;
-    transition: all 0.15s ease;
+    transition: all 0.15s ease; padding: 0;
   }
   .digit-chip:hover { border-color: var(--brass-bright); }
   .digit-chip.state-eliminated {
@@ -172,7 +172,7 @@
 <div class="wrap">
   <header>
     <div class="title-row"><h1>1A2B</h1></div>
-    <div class="subtitle">可單機挑戰電腦，也可跟朋友遠端對戰，或出題讓大家一起猜。多人連線模式，房主需保持頁面開啟。</div>
+    <div class="subtitle">可以單機挑戰電腦，也可跟朋友遠端對戰，或出題讓大家一起猜。多人連線模式房主需保持頁面開啟。</div>
   </header>
   <div class="tabs">
     <button class="tab active" data-tab="solo">單機模式</button>
