@@ -141,9 +141,7 @@
     color: #8ed680; border-color: #7a9a6f; background: rgba(122, 154, 111, 0.2);
     box-shadow: 0 0 6px rgba(122, 154, 111, 0.25);
   }
-  .guess-digit { display:inline-block; transition: opacity .15s ease, color .15s ease, filter .15s ease; }
-.guess-digit.eliminated { opacity:.28; color:var(--paper-dim); filter:grayscale(1); }
-.digit-tracker-legend {
+  .digit-tracker-legend {
     display: flex; justify-content: space-between; align-items: center;
     font-size: 11px; color: #757983; margin-bottom: 8px;
   }
@@ -166,13 +164,66 @@
     .guess-row { gap: 7px; padding: 9px 8px; }
     .guess-value { font-size: 16px; }
   }
+
+  /* Responsive layout: desktop / tablet / phone */
+  html { -webkit-text-size-adjust: 100%; }
+  *, *::before, *::after { box-sizing: border-box; }
+  body { margin: 0; min-width: 0; overflow-x: hidden; }
+  img, svg, canvas { max-width: 100%; height: auto; }
+  button, input, textarea, select { max-width: 100%; }
+  .wrap { width: min(1180px, 100%); margin: 0 auto; padding-left: clamp(12px, 3vw, 32px); padding-right: clamp(12px, 3vw, 32px); }
+  .split { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .card, .panel, .board, .history, .tracker { min-width: 0; }
+  .guess-row, .title-row, .tabs, .actions { min-width: 0; }
+  .guess-value, .digit-chip, .room-code { overflow-wrap: anywhere; }
+
+  @media (max-width: 900px) {
+    .wrap { padding-top: 18px; padding-bottom: 36px; }
+    .split { grid-template-columns: 1fr; }
+    .card { padding: 18px; }
+    .title-row { flex-wrap: wrap; }
+    .tabs { overflow-x: auto; scrollbar-width: none; }
+    .tabs::-webkit-scrollbar { display: none; }
+    .tab { flex: 1 0 auto; white-space: nowrap; }
+  }
+
+  @media (max-width: 600px) {
+    .wrap { padding: 12px 10px 28px; }
+    header { margin-bottom: 14px; }
+    h1, .title-code { font-size: clamp(22px, 7vw, 28px); }
+    .subtitle { font-size: 12px; line-height: 1.55; }
+    .card { padding: 13px; border-radius: 8px; }
+    .tabs { gap: 2px; }
+    .tab { padding: 10px 8px; font-size: 12px; }
+    input[type="text"], input[type="password"], input[type="number"], textarea { width: 100%; min-height: 42px; font-size: 16px; }
+    button { min-height: 40px; }
+    .guess-row { gap: 6px; padding: 8px 7px; flex-wrap: wrap; }
+    .guess-value { font-size: 15px; max-width: 100%; }
+    .digit-tracker, .tracker-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+    .digit-chip { width: 100%; min-width: 0; }
+    .actions { flex-wrap: wrap; }
+    .actions > * { flex: 1 1 140px; }
+    .room-code { font-size: clamp(20px, 7vw, 30px); letter-spacing: .08em; }
+  }
+
+  @media (max-width: 380px) {
+    .wrap { padding-left: 7px; padding-right: 7px; }
+    .card { padding: 10px; }
+    .tab { font-size: 11px; padding-left: 5px; padding-right: 5px; }
+    .digit-tracker, .tracker-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .guess-row { font-size: 13px; }
+  }
+
+  @media (min-width: 901px) {
+    .wrap { padding-top: 28px; padding-bottom: 56px; }
+  }
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
     <div class="title-row"><h1>1A2B</h1></div>
-    <div class="subtitle">可單機挑戰電腦，也可跟朋友遠端對戰，或出題讓大家一起猜。多人連線模式，房主需保持頁面開啟。</div>
+    <div class="subtitle">可單機挑戰電腦，也可跟朋友遠端對戰，或出題讓大家一起猜。多人連線模式房主需保持頁面開啟。</div>
   </header>
   <div class="tabs">
     <button class="tab active" data-tab="solo">單機模式</button>
@@ -184,7 +235,7 @@
     <div id="solo-setup">
       <div class="card">
         <div class="card-label">單機模式</div>
-        <p class="desc">由電腦隨機產生一組「數字不重複」的答案。先選擇 3～9 位數，再開始挑戰。</p>
+        <p class="desc">先選擇 3～9 位數，由電腦隨機產生一組「數字不重複」的答案，再開始挑戰。</p>
         <div class="card-label">選擇猜幾位數</div>
         <div class="length-picker" id="solo-length-picker"></div>
         <button class="btn" id="solo-start" disabled>開始遊戲</button>
@@ -214,7 +265,7 @@
             <button type="button" class="copy-btn" id="solo-notes-reset" style="padding:2px 8px; font-size:11px;">重設劃記</button>
           </div>
           <div class="digit-tracker" id="solo-digit-tracker"></div>
-          <div style="font-size:11px; color:#6a6d74; margin-bottom:8px;">點擊切換：預設 ➔ <span style="color:var(--danger)">✕ 排除</span> ➔ <span style="color:#8ed680">⭕ 包含</span></div>
+          <div style="font-size:11px; color:#6a6d74; margin-bottom:8px;">點擊切換：預設 ➔ <span style="color:var(--danger)">✕ 排除</span> ➔ <span style="color:#8ed680">✓ 包含</span></div>
           <textarea class="note-textarea" id="solo-notes-text" placeholder="請在此區域筆記（EX：1234 中有兩碼、5 不在第三位...）" rows="4"></textarea>
         </div>
       </div>
@@ -233,7 +284,7 @@
         <div class="card-label" style="margin-top:12px;">你的名稱</div>
         <input type="text" id="duel-name-input" placeholder="輸入你的名稱" maxlength="10" autocomplete="nickname">
         <div class="row"><button class="btn" id="duel-create">建立新房間</button></div>
-        <div class="row" style="margin-top:12px;">
+        <div class="row" style="margin-top:6px;">
           <input type="text" id="duel-join-code" placeholder="輸入房號加入" maxlength="8" style="letter-spacing:0.2em; font-size:16px;">
           <button class="btn btn-secondary" id="duel-join" style="margin-top:0; flex:0 0 auto; width:auto; padding:0 18px;">加入</button>
         </div>
@@ -265,13 +316,12 @@
       </div>
       <div class="card" id="duel-secret-card">
         <div class="card-label" id="duel-secret-label">你的密碼（選擇位數後設定）</div>
-        <input type="text" id="duel-secret-input" inputmode="numeric" maxlength="4" placeholder="0000" autocomplete="off">
+        <input type="password" id="duel-secret-input" inputmode="numeric" maxlength="4" placeholder="0000" autocomplete="off">
         <button class="btn" id="duel-secret-submit">鎖定密碼</button>
         <div class="error-msg" id="duel-secret-error"></div>
       </div>
       <div id="duel-play" style="display:none;">
         <div id="duel-win" style="display:none;" class="win-banner"></div>
-        <button class="btn" id="duel-replay" style="display:none; margin-bottom:12px;">再玩一局（保留房間）</button>
         
         <div id="duel-turn-banner" class="turn-banner turn-my">
           <span class="lamp" id="duel-banner-lamp"></span>
@@ -299,7 +349,7 @@
                 <button type="button" class="copy-btn" id="duel-notes-reset" style="padding:2px 8px; font-size:11px;">重設劃記</button>
               </div>
               <div class="digit-tracker" id="duel-digit-tracker"></div>
-              <div style="font-size:11px; color:#6a6d74; margin-bottom:8px;">點擊切換：預設 ➔ <span style="color:var(--danger)">✕ 排除</span> ➔ <span style="color:#8ed680">⭕ 包含</span></div>
+              <div style="font-size:11px; color:#6a6d74; margin-bottom:8px;">點擊切換：預設 ➔ <span style="color:var(--danger)">✕ 排除</span> ➔ <span style="color:#8ed680">✓ 包含</span></div>
               <textarea class="note-textarea" id="duel-notes-text" placeholder="請在此區域筆記（EX：1234 中有兩碼、5 不在第三位...）" rows="3"></textarea>
             </div>
             <div class="card">
@@ -350,10 +400,10 @@
       </div>
       <div class="card" id="host-secret-card">
         <div class="card-label" id="host-secret-label">設定題目（不重複數字）</div>
-        <input type="text" id="host-secret-input" inputmode="numeric" maxlength="4" placeholder="0000" autocomplete="off">
+        <input type="password" id="host-secret-input" inputmode="numeric" maxlength="4" placeholder="0000" autocomplete="off">
         <button class="btn" id="host-secret-submit">出題</button>
         <div class="error-msg" id="host-secret-error"></div>
-        <div class="hint">出題後題目會被鎖定；本局結束後可直接「再出一題」，不用重新建立房間。</div>
+        <div class="hint">出題後題目會被鎖定，直到你離開房間為止。</div>
       </div>
       <div class="card" id="host-owner-board" style="display:none;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
@@ -373,7 +423,6 @@
         </div>
       </div>
       <div id="host-win" style="display:none;" class="win-banner"></div>
-      <button class="btn" id="host-replay" style="display:none; margin-bottom:12px;">再出一題（保留房間）</button>
       <div class="card" id="host-guess-card" style="display:none;">
         <div class="card-label" id="host-guess-label">輸入你的猜測</div>
         <input type="text" id="host-guess-input" inputmode="numeric" maxlength="4" placeholder="0000">
@@ -386,7 +435,7 @@
           <button type="button" class="copy-btn" id="host-notes-reset" style="padding:2px 8px; font-size:11px;">重設劃記</button>
         </div>
         <div class="digit-tracker" id="host-digit-tracker"></div>
-        <div style="font-size:11px; color:#6a6d74; margin-bottom:8px;">點擊切換：預設 ➔ <span style="color:var(--danger)">✕ 排除</span> ➔ <span style="color:#8ed680">⭕ 包含</span></div>
+        <div style="font-size:11px; color:#6a6d74; margin-bottom:8px;">點擊切換：預設 ➔ <span style="color:var(--danger)">✕ 排除</span> ➔ <span style="color:#8ed680">✓ 包含</span></div>
         <textarea class="note-textarea" id="host-notes-text" placeholder="請在此區域筆記（EX：1234 中有兩碼、5 不在第三位...）" rows="2"></textarea>
       </div>
       <div class="card">
@@ -406,11 +455,11 @@
   <details class="rules">
     <summary>規則說明</summary>
     <div class="rules-body">
-      <b>A</b> 表示數字對、位置也對；<b>B</b> 表示數字對但位置錯。<br>
-      密碼須為不重複的數字，例如 1234、0987。<br>
+      <b>A</b> 代表數字對、位置也對；<b>B</b> 代表數字對但位置錯。<br>
+      密碼須為不重複的數字，EX: 1234、0987。<br>
       單機模式：選擇 3 到 9 位數後，由電腦隨機出題，可不限次數猜到答對為止。<br>
       對戰模式：兩人各自出題3到9位數不重複數字，雙方輪流猜測對方的密碼，先全對者獲勝。<br>
-      出題模式：出題者先提供3到9位數不重複數字，其他人各自輪流猜，第一個全對的人獲勝。
+      出題模式：出題者先選擇3到9位數不重複數字，其他人各自輪流猜，第一個全對的人獲勝。
     </div>
   </details>
 </div>
@@ -450,30 +499,17 @@
     return String(value == null ? '' : value).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
   }
 
-  function getEliminatedDigits(containerId) {
-    const container = document.getElementById(containerId);
-    const set = new Set();
-    if (!container) return set;
-    container.querySelectorAll('.digit-chip.state-eliminated').forEach(chip => set.add(chip.textContent.trim()));
-    return set;
-  }
-
-  function renderGuessDigits(guessStr, eliminated) {
-    return String(guessStr).split('').map(d => `<span class="guess-digit${eliminated.has(d) ? ' eliminated' : ''}" data-digit="${d}">${d}</span>`).join('');
-  }
-
-  function renderGuessRow(idx, guessStr, a, b, eliminated = new Set()) {
-    return `<div class="guess-row"><span class="guess-num">#${idx}</span><span class="guess-value digits">${renderGuessDigits(guessStr, eliminated)}</span><span class="guess-result"><span class="result-a">${a}A</span> <span class="result-b">${b}B</span></span></div>`;
+  function renderGuessRow(idx, guessStr, a, b) {
+    return `<div class="guess-row"><span class="guess-num">#${idx}</span><span class="guess-value digits">${guessStr}</span><span class="guess-result"><span class="result-a">${a}A</span> <span class="result-b">${b}B</span></span></div>`;
   }
 
   function renderOtherGuessRow(idx, name, guessStr, a, b) {
-    return `<div class="guess-row"><span class="guess-num">#${idx}</span><span class="player-badge" style="max-width:85px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${escapeHtml(name)}">${escapeHtml(name)}</span><span class="guess-value digits">${renderGuessDigits(guessStr, new Set())}</span><span class="guess-result"><span class="result-a">${a}A</span> <span class="result-b">${b}B</span></span></div>`;
+    return `<div class="guess-row"><span class="guess-num">#${idx}</span><span class="player-badge" style="max-width:85px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${escapeHtml(name)}">${escapeHtml(name)}</span><span class="guess-value digits">${guessStr}</span><span class="guess-result"><span class="result-a">${a}A</span> <span class="result-b">${b}B</span></span></div>`;
   }
 
-  function renderHistory(el, list, trackerId) {
+  function renderHistory(el, list) {
     if (!list || list.length === 0) { el.innerHTML = ''; return; }
-    const eliminated = trackerId ? getEliminatedDigits(trackerId) : new Set();
-    el.innerHTML = list.map((g, i) => renderGuessRow(i + 1, g.guess, g.a, g.b, eliminated)).join('');
+    el.innerHTML = list.map((g, i) => renderGuessRow(i + 1, g.guess, g.a, g.b)).join('');
   }
 
   function renderOthersHistory(el, list) {
@@ -507,7 +543,7 @@
     return false;
   }
 
-  function setupDigitTracker(containerId, resetBtnId, onChange) {
+  function setupDigitTracker(containerId, resetBtnId) {
     const container = document.getElementById(containerId);
     if (!container) return;
     container.innerHTML = '';
@@ -519,23 +555,22 @@
       chip.addEventListener('click', () => {
         state = (state + 1) % 3;
         chip.className = 'digit-chip' + (state === 1 ? ' state-eliminated' : state === 2 ? ' state-confirmed' : '');
-        if (onChange) onChange();
       });
       container.appendChild(chip);
     }
     const resetBtn = document.getElementById(resetBtnId);
     if (resetBtn) {
-      resetBtn.onclick = () => {
-        container.querySelectorAll('.digit-chip').forEach(c => { c.className = 'digit-chip'; });
-        if (onChange) onChange();
-      };
+      resetBtn.addEventListener('click', () => {
+        container.querySelectorAll('.digit-chip').forEach(c => {
+          c.className = 'digit-chip';
+        });
+      });
     }
   }
 
-
-  setupDigitTracker('solo-digit-tracker', 'solo-notes-reset', () => updateSoloUI());
-  setupDigitTracker('duel-digit-tracker', 'duel-notes-reset', () => updateDuelUI());
-  setupDigitTracker('host-digit-tracker', 'host-notes-reset', () => updateHostGuesserUI());
+  setupDigitTracker('solo-digit-tracker', 'solo-notes-reset');
+  setupDigitTracker('duel-digit-tracker', 'duel-notes-reset');
+  setupDigitTracker('host-digit-tracker', 'host-notes-reset');
 
   document.querySelectorAll('.tab').forEach(tab => {
     tab.addEventListener('click', () => {
@@ -584,7 +619,7 @@
     setText('solo-guess-label', `請輸入你的猜測（${solo.length} 位）`);
     setText('solo-length-badge', `${solo.length} 位數`);
     setText('solo-status-text', solo.won ? '挑戰完成' : `電腦已出好 ${solo.length} 位數題目`);
-    renderHistory(document.getElementById('solo-history'), solo.history, 'solo-digit-tracker');
+    renderHistory(document.getElementById('solo-history'), solo.history);
     document.getElementById('solo-empty').style.display = solo.history.length ? 'none' : 'block';
     if (solo.won) {
       win.style.display = 'block';
@@ -603,7 +638,7 @@
     document.getElementById('solo-guess-input').value = '';
     document.getElementById('solo-guess-error').textContent = '';
     document.getElementById('solo-notes-text').value = '';
-    setupDigitTracker('solo-digit-tracker', 'solo-notes-reset', () => updateSoloUI());
+    setupDigitTracker('solo-digit-tracker', 'solo-notes-reset');
     updateSoloUI();
     document.getElementById('solo-guess-input').focus();
   }
@@ -688,7 +723,7 @@
       topBadge.style.display = 'none';
     }
 
-    renderHistory(document.getElementById('duel-my-history'), duel.myHistory, 'duel-digit-tracker');
+    renderHistory(document.getElementById('duel-my-history'), duel.myHistory);
     renderHistory(document.getElementById('duel-their-history'), duel.theirHistory);
 
     const isMyTurn = (duel.currentTurn === duel.role);
@@ -738,15 +773,10 @@
     }
 
     const win = document.getElementById('duel-win');
-    const replay = document.getElementById('duel-replay');
     if (duel.winner) {
       win.style.display = 'block';
       win.textContent = duel.winner === 'me' ? '🎉 你贏了！你猜中了對方的密碼。' : (duel.winner === 'draw' ? '平手！雙方同時答對。' : `對方猜中你的密碼了：${duel.mySecret}`);
-      replay.style.display = 'block';
-    } else {
-      win.style.display = 'none';
-      replay.style.display = 'none';
-    }
+    } else win.style.display = 'none';
   }
 
   function bindDuelConnection(conn) {
@@ -759,12 +789,6 @@
       if (!data || typeof data !== 'object') return;
       if (data.type === 'config') {
         duel.length = data.length;
-      } else if (data.type === 'roundReset') {
-        duel.mySecret = null; duel.mySecretReady = false; duel.oppSecretReady = false;
-        duel.myHistory = []; duel.theirHistory = []; duel.winner = null; duel.currentTurn = 'a';
-        document.getElementById('duel-guess-error').textContent = '';
-        document.getElementById('duel-notes-text').value = '';
-        setupDigitTracker('duel-digit-tracker', 'duel-notes-reset', () => updateDuelUI());
       } else if (data.type === 'hello') {
         duel.oppName = data.name || '對手';
         if (data.length && !duel.length) { duel.length = data.length; }
@@ -905,23 +929,6 @@
 
   document.getElementById('duel-guess-submit').addEventListener('click', handleDuelGuessSubmit);
 
-  function duelStartNextRound() {
-    if (!duel.conn || !duel.conn.open || !duel.length) return;
-    duel.mySecret = null; duel.mySecretReady = false; duel.oppSecretReady = false;
-    duel.myHistory = []; duel.theirHistory = []; duel.winner = null; duel.currentTurn = 'a';
-    document.getElementById('duel-secret-input').value = '';
-    document.getElementById('duel-guess-input').value = '';
-    document.getElementById('duel-guess-error').textContent = '';
-    document.getElementById('duel-secret-error').textContent = '';
-    document.getElementById('duel-notes-text').value = '';
-    setupDigitTracker('duel-digit-tracker', 'duel-notes-reset', () => updateDuelUI());
-    duel.conn.send({ type:'roundReset' });
-    updateDuelUI();
-    document.getElementById('duel-secret-input').focus();
-  }
-
-  document.getElementById('duel-replay').addEventListener('click', duelStartNextRound);
-
   document.getElementById('duel-leave').addEventListener('click', () => {
     duelResetState(); duelGameEl.style.display = 'none'; duelSetupEl.style.display = 'block';
     document.getElementById('duel-secret-input').value = ''; document.getElementById('duel-guess-input').value = '';
@@ -930,7 +937,7 @@
     document.getElementById('duel-win').style.display = 'none';
     document.getElementById('duel-secret-badge-top').style.display = 'none';
     document.getElementById('duel-notes-text').value = '';
-    setupDigitTracker('duel-digit-tracker', 'duel-notes-reset', () => updateDuelUI());
+    setupDigitTracker('duel-digit-tracker', 'duel-notes-reset');
   });
 
   document.getElementById('duel-copy').addEventListener('click', () => copyText(duel.roomCode, document.getElementById('duel-copy')));
@@ -999,9 +1006,6 @@
       setText('host-board-secret-code', host.secret);
     }
 
-    const replay = document.getElementById('host-replay');
-    replay.style.display = host.winner ? 'block' : 'none';
-
     const hist = document.getElementById('host-owner-history'), empty = document.getElementById('host-owner-empty');
     if (!host.allGuesses.length) {
       hist.innerHTML = ''; empty.style.display = 'block';
@@ -1045,7 +1049,7 @@
     const my = document.getElementById('host-my-history'), myEmpty = document.getElementById('host-my-empty');
     if (host.myHistory.length) {
       myEmpty.style.display = 'none';
-      renderHistory(my, host.myHistory, 'host-digit-tracker');
+      renderHistory(my, host.myHistory);
     } else {
       myEmpty.style.display = 'block'; my.innerHTML = '';
     }
@@ -1101,7 +1105,7 @@
   }
 
   function hostChooseLength(n) {
-    host.length = n; host.secret = null; host.winner = null; host.allGuesses = [];
+    host.length = n; host.secret = null; host.winner = null;
     broadcastHost({type:'config', length:n, ready:false, winner:null});
     updateHostOwnerUI();
   }
@@ -1123,14 +1127,7 @@
       conn.on('data', data => {
         if (!data || typeof data !== 'object') return;
         if (data.type === 'config') {
-          const wasRoundReset = !data.ready && !data.winner;
-          host.length = data.length; host.secret = data.ready ? true : null; host.winner = data.winner || null;
-          if (wasRoundReset) {
-            host.myHistory = []; host.othersHistory = [];
-            document.getElementById('host-guess-error').textContent = '';
-            document.getElementById('host-notes-text').value = '';
-            setupDigitTracker('host-digit-tracker', 'host-notes-reset', () => updateHostGuesserUI());
-          }
+          host.length = data.length; host.secret = data.ready ? true : null; if (data.winner) host.winner = data.winner;
         } else if (data.type === 'guessResult') {
           host.myHistory.push({guess:data.guess, a:data.a, b:data.b});
         } else if (data.type === 'guessBroadcast' && data.playerId !== host.myId) {
@@ -1150,22 +1147,10 @@
   document.getElementById('host-create').addEventListener('click', hostCreateRoom);
   document.getElementById('host-join').addEventListener('click', hostJoinRoom);
 
-  function hostStartNextRound() {
-    if (!host.isOwner || !host.length) return;
-    host.secret = null; host.winner = null; host.allGuesses = [];
-    broadcastHost({type:'config', length:host.length, ready:false, winner:null});
-    updateHostOwnerUI();
-    document.getElementById('host-secret-input').value = '';
-    document.getElementById('host-secret-error').textContent = '';
-    document.getElementById('host-secret-input').focus();
-  }
-
-  document.getElementById('host-replay').addEventListener('click', hostStartNextRound);
-
   document.getElementById('host-secret-submit').addEventListener('click', () => {
     const input = document.getElementById('host-secret-input'), errEl = document.getElementById('host-secret-error'), val = input.value.trim(); errEl.textContent = '';
     if (!host.length || !isValidCode(val, host.length)) { errEl.textContent = `請輸入 ${host.length||4} 位不重複的數字。`; return; }
-    host.secret = val; host.winner = null; host.allGuesses = []; input.value = '';
+    host.secret = val; input.value = '';
     broadcastHost({type:'config', length:host.length, ready:true, winner:null});
     updateHostOwnerUI();
   });
@@ -1191,7 +1176,7 @@
     document.getElementById('host-owner-history').innerHTML = ''; document.getElementById('host-my-history').innerHTML = ''; document.getElementById('host-others-history').innerHTML = '';
     document.getElementById('host-win').style.display = 'none'; document.getElementById('host-secret-input').value = ''; document.getElementById('host-guess-input').value = '';
     document.getElementById('host-notes-text').value = '';
-    setupDigitTracker('host-digit-tracker', 'host-notes-reset', () => updateHostGuesserUI());
+    setupDigitTracker('host-digit-tracker', 'host-notes-reset');
   }
 
   document.getElementById('host-owner-leave').addEventListener('click', resetHostUI);
