@@ -171,8 +171,8 @@
 <body>
 <div class="wrap">
   <header>
-    <div class="title-row"><h1>1A2B</h1><span class="title-code digits">猜數字</span></div>
-    <div class="subtitle">可單機挑戰電腦，也可跟朋友遠端對戰，或出題讓大家一起猜。多人模式免資料庫，房主需保持頁面開啟。</div>
+    <div class="title-row"><h1>1A2B</h1></div>
+    <div class="subtitle">可單機挑戰電腦，也可跟朋友遠端對戰，或出題讓大家一起猜。多人連線模式，房主需保持頁面開啟。</div>
   </header>
   <div class="tabs">
     <button class="tab active" data-tab="solo">單機模式</button>
@@ -210,7 +210,7 @@
         </div>
         <div class="card" id="solo-note-card">
           <div class="digit-tracker-legend">
-            <span class="card-label" style="margin-bottom:0;">📝 筆記與推理記錄區</span>
+            <span class="card-label" style="margin-bottom:0;">📝 筆記</span>
             <button type="button" class="copy-btn" id="solo-notes-reset" style="padding:2px 8px; font-size:11px;">重設劃記</button>
           </div>
           <div class="digit-tracker" id="solo-digit-tracker"></div>
@@ -233,7 +233,7 @@
         <div class="card-label" style="margin-top:12px;">你的名稱</div>
         <input type="text" id="duel-name-input" placeholder="輸入你的名稱" maxlength="10" autocomplete="nickname">
         <div class="row"><button class="btn" id="duel-create">建立新房間</button></div>
-        <div class="row" style="margin-top:6px;">
+        <div class="row" style="margin-top:12px;">
           <input type="text" id="duel-join-code" placeholder="輸入房號加入" maxlength="8" style="letter-spacing:0.2em; font-size:16px;">
           <button class="btn btn-secondary" id="duel-join" style="margin-top:0; flex:0 0 auto; width:auto; padding:0 18px;">加入</button>
         </div>
@@ -295,7 +295,7 @@
           <div>
             <div class="card" id="duel-note-card">
               <div class="digit-tracker-legend">
-                <span class="card-label" style="margin-bottom:0;">📝 玩家筆記與推理記錄區</span>
+                <span class="card-label" style="margin-bottom:0;">📝 筆記</span>
                 <button type="button" class="copy-btn" id="duel-notes-reset" style="padding:2px 8px; font-size:11px;">重設劃記</button>
               </div>
               <div class="digit-tracker" id="duel-digit-tracker"></div>
@@ -382,7 +382,7 @@
       </div>
       <div class="card" id="host-guesser-note-card" style="display:none;">
         <div class="digit-tracker-legend">
-          <span class="card-label" style="margin-bottom:0;">📝 猜題筆記與推理記錄區</span>
+          <span class="card-label" style="margin-bottom:0;">📝 筆記</span>
           <button type="button" class="copy-btn" id="host-notes-reset" style="padding:2px 8px; font-size:11px;">重設劃記</button>
         </div>
         <div class="digit-tracker" id="host-digit-tracker"></div>
@@ -406,11 +406,11 @@
   <details class="rules">
     <summary>規則說明</summary>
     <div class="rules-body">
-      <b>A</b> 代表數字對、位置也對；<b>B</b> 代表數字對但位置錯。<br>
+      <b>A</b> 表示數字對、位置也對；<b>B</b> 表示數字對但位置錯。<br>
       密碼須為不重複的數字，例如 1234、0987。<br>
       單機模式：選擇 3 到 9 位數後，由電腦隨機出題，可不限次數猜到答對為止。<br>
-      對戰模式：兩人各自出題3到9位數不重複數字，雙方輪流猜測對方的密碼（輪到的玩家會有小綠燈提示），先全對者獲勝。<br>
-      出題模式：出題者先選擇3到9位數不重複數字出題，其他人各自輪流猜，第一個全對的人獲勝。
+      對戰模式：兩人各自出題3到9位數不重複數字，雙方輪流猜測對方的密碼，先全對者獲勝。<br>
+      出題模式：出題者先提供3到9位數不重複數字，其他人各自輪流猜，第一個全對的人獲勝。
     </div>
   </details>
 </div>
