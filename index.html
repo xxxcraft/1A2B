@@ -184,12 +184,12 @@
 <div class="wrap">
   <header>
     <div class="title-row"><h1>1A2B</h1></div>
-    <div class="subtitle">可以單機挑戰電腦，也可跟朋友遠端對戰，或出題讓大家一起猜；出題模式也可交給電腦隨機出題。多人連線模式房主需保持頁面開啟。</div>
+    <div class="subtitle">可以單機挑戰電腦，也可跟朋友遠端對戰，或出題讓大家一起猜。對戰與多人模式可遠端連線，房主需保持頁面開啟。</div>
   </header>
   <div class="tabs">
     <button class="tab active" data-tab="solo">單機模式</button>
     <button class="tab" data-tab="duel">對戰模式</button>
-    <button class="tab" data-tab="host">出題模式</button>
+    <button class="tab" data-tab="host">多人模式</button>
   </div>
 
   <div class="panel active" id="panel-solo">
@@ -226,7 +226,7 @@
             <button type="button" class="copy-btn" id="solo-notes-reset" style="padding:2px 8px; font-size:11px;">重設劃記</button>
           </div>
           <div class="digit-tracker" id="solo-digit-tracker"></div>
-          <div style="font-size:11px; color:#6a6d74; margin-bottom:8px;">點擊切換：預設 ➔ <span style="color:var(--danger)">✕ 排除</span> ➔ <span style="color:#8ed680">⭕ 包含</span></div>
+          <div style="font-size:11px; color:#6a6d74; margin-bottom:8px;">點擊切換：預設 ➔ <span style="color:var(--danger)">✕ 排除</span> ➔ <span style="color:#8ed680">✓ 包含</span></div>
           <textarea class="note-textarea" id="solo-notes-text" placeholder="請在此區域筆記（EX：1234 中有兩碼、5 不在第三位...）" rows="4"></textarea>
         </div>
       </div>
@@ -298,7 +298,7 @@
           <div class="card-label">💬 聊天室</div>
           <div class="chat-messages" id="duel-spectator-chat-messages"><div class="chat-empty">尚無留言</div></div>
           <div class="chat-input-row">
-            <input type="text" id="duel-spectator-chat-input" maxlength="120" placeholder="輸入留言…" autocomplete="off">
+            <input type="text" id="duel-spectator-chat-input" maxlength="100" placeholder="輸入留言…" autocomplete="off">
             <button class="btn" id="duel-spectator-chat-send">送出</button>
           </div>
         </div>
@@ -346,7 +346,7 @@
                 <button type="button" class="copy-btn" id="duel-notes-reset" style="padding:2px 8px; font-size:11px;">重設劃記</button>
               </div>
               <div class="digit-tracker" id="duel-digit-tracker"></div>
-              <div style="font-size:11px; color:#6a6d74; margin-bottom:8px;">點擊切換：預設 ➔ <span style="color:var(--danger)">✕ 排除</span> ➔ <span style="color:#8ed680">⭕ 包含</span></div>
+              <div style="font-size:11px; color:#6a6d74; margin-bottom:8px;">點擊切換：預設 ➔ <span style="color:var(--danger)">✕ 排除</span> ➔ <span style="color:#8ed680">✓ 包含</span></div>
               <textarea class="note-textarea" id="duel-notes-text" placeholder="請在此區域筆記（EX：1234 中有兩碼、5 不在第三位...）" rows="3"></textarea>
             </div>
             <div class="card">
@@ -372,16 +372,16 @@
     <div id="host-setup">
       <div class="card">
         <div class="card-label">出題模式</div>
-        <p class="desc">先選擇 3 到 9 位數，再選擇由你自己出題或讓電腦隨機出題。開房間後把房號傳給朋友們，大家各自猜測，第一個猜中的人獲勝。</p>
-        <div class="card-label" style="margin-top:12px;">出題方式</div>
-        <div class="row" id="host-mode-picker">
-          <button type="button" class="btn" id="host-mode-manual" style="margin-top:0;">自己出題</button>
-          <button type="button" class="btn btn-secondary" id="host-mode-computer" style="margin-top:0;">電腦出題</button>
+        <p class="desc">可以自己出題，也可以讓電腦隨機出題、房主與大家一起搶答。建立房間後把房號傳給朋友們，第一個猜中的人獲勝。</p>
+        <div class="card-label">選擇出題方式</div>
+        <div class="length-picker" id="host-mode-picker" style="margin-bottom:10px;">
+          <button type="button" class="length-btn selected" data-mode="manual" style="flex:1 1 45%; font-size:14px; padding:12px 4px;">房主出題</button>
+          <button type="button" class="length-btn" data-mode="auto" style="flex:1 1 45%; font-size:14px; padding:12px 4px;">電腦出題</button>
         </div>
-        <div class="hint" id="host-mode-hint">自己設定一組不重複數字作為題目。</div>
-        <div class="card-label" style="margin-top:12px;">你的名稱</div>
+        <p class="desc" id="host-mode-desc" style="margin-bottom:16px;">由你自訂一組密碼，其他人一起搶答，你可以即時看到大家的猜測。</p>
+        <div class="card-label">你的名稱</div>
         <input type="text" id="host-name-input" placeholder="輸入你的名稱" maxlength="10" autocomplete="nickname">
-        <button class="btn" id="host-create">出題</button>
+        <button class="btn" id="host-create">開始遊戲</button>
         <div class="row" style="margin-top:14px;">
           <input type="text" id="host-join-code" placeholder="輸入房號加入猜題" maxlength="8" style="letter-spacing:0.2em; font-size:16px;">
           <button class="btn btn-secondary" id="host-join" style="margin-top:0; flex:0 0 auto; width:auto; padding:0 18px;">加入</button>
@@ -416,15 +416,6 @@
         <div class="error-msg" id="host-secret-error"></div>
         <div class="hint">出題後題目會被鎖定；本局結束後可直接「再出一題」，不用重新建立房間。</div>
       </div>
-      <div class="card" id="host-owner-guess-card" style="display:none;">
-        <div class="card-label" id="host-owner-guess-label">房主猜測</div>
-        <p class="desc" style="margin-bottom:12px;">電腦已隨機產生題目，房主也可以和其他玩家一起猜。</p>
-        <input type="text" id="host-owner-guess-input" inputmode="numeric" maxlength="4" placeholder="0000" autocomplete="off">
-        <button class="btn" id="host-owner-guess-submit">送出猜測</button>
-        <div class="error-msg" id="host-owner-guess-error"></div>
-        <div class="history" id="host-owner-my-history" style="margin-top:14px;"></div>
-        <div class="empty-state" id="host-owner-my-empty">你尚未猜題</div>
-      </div>
       <div class="card" id="host-owner-board" style="display:none;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
           <div class="card-label" style="margin-bottom:0;">所有玩家的猜測</div>
@@ -437,7 +428,7 @@
         <div class="card-label">💬 聊天室</div>
         <div class="chat-messages" id="host-owner-chat-messages"><div class="chat-empty">尚無留言</div></div>
         <div class="chat-input-row">
-          <input type="text" id="host-owner-chat-input" maxlength="120" placeholder="輸入留言…" autocomplete="off">
+          <input type="text" id="host-owner-chat-input" maxlength="100" placeholder="輸入留言…" autocomplete="off">
           <button class="btn" id="host-owner-chat-send">送出</button>
         </div>
       </div>
@@ -448,6 +439,10 @@
         <div class="status-line">
           <span><span class="status-dot" id="host-guesser-dot"></span><span id="host-guesser-status">題目尚未設定…</span></span>
           <span class="player-badge" id="host-my-name-badge">你</span>
+        </div>
+        <div class="share-row" id="host-guesser-share-row" style="display:none;">
+          <span class="code-id" id="host-guesser-room-code">------</span>
+          <button class="copy-btn" id="host-guesser-copy">複製房號</button>
         </div>
       </div>
       <div id="host-win" style="display:none;" class="win-banner"></div>
@@ -464,7 +459,7 @@
           <button type="button" class="copy-btn" id="host-notes-reset" style="padding:2px 8px; font-size:11px;">重設劃記</button>
         </div>
         <div class="digit-tracker" id="host-digit-tracker"></div>
-        <div style="font-size:11px; color:#6a6d74; margin-bottom:8px;">點擊切換：預設 ➔ <span style="color:var(--danger)">✕ 排除</span> ➔ <span style="color:#8ed680">⭕ 包含</span></div>
+        <div style="font-size:11px; color:#6a6d74; margin-bottom:8px;">點擊切換：預設 ➔ <span style="color:var(--danger)">✕ 排除</span> ➔ <span style="color:#8ed680">✓ 包含</span></div>
         <textarea class="note-textarea" id="host-notes-text" placeholder="請在此區域筆記（EX：1234 中有兩碼、5 不在第三位...）" rows="2"></textarea>
       </div>
       <div class="card">
@@ -481,7 +476,7 @@
         <div class="card-label">💬 聊天室</div>
         <div class="chat-messages" id="host-guesser-chat-messages"><div class="chat-empty">尚無留言</div></div>
         <div class="chat-input-row">
-          <input type="text" id="host-guesser-chat-input" maxlength="120" placeholder="輸入留言…" autocomplete="off">
+          <input type="text" id="host-guesser-chat-input" maxlength="100" placeholder="輸入留言…" autocomplete="off">
           <button class="btn" id="host-guesser-chat-send">送出</button>
         </div>
       </div>
@@ -496,7 +491,7 @@
       密碼須為不重複的數字，例如 1234、0987。<br>
       單機模式：選擇 3 到 9 位數後，由電腦隨機出題，可不限次數猜到答對為止。<br>
       對戰模式：兩人各自出題3到9位數不重複數字，雙方輪流猜測對方的密碼，先全對者獲勝。<br>
-      出題模式：可選擇自己出題或電腦出題；其他玩家各自猜測，第一個全對的人獲勝。
+      出題模式：有兩種玩法，第一個全對者獲勝。。「房主出題」由房主提供3到9位數不重複數字，其他人各自輪流猜；「電腦出題」由房主選擇位數後，電腦自動出題，房主和其他玩家一起搶答。
     </div>
   </details>
 </div>
@@ -1112,7 +1107,7 @@
     if (duel.winner || duel.solvedMe) return;
     const errEl = document.getElementById('duel-guess-error');
     if (duel.currentTurn !== duel.role) {
-      errEl.textContent = '還沒輪到你的回合，請等待對手猜測。';
+      errEl.textContent = '還沒輪到你的回合，等待對手猜測。';
       return;
     }
     const input = document.getElementById('duel-guess-input');
@@ -1172,21 +1167,42 @@
   restrictNumeric(document.getElementById('duel-guess-input'));
 
   const host = {
-    roomCode:null, peer:null, conn:null, connections:new Map(), isOwner:false,
-    mode:'manual', myId:null, myName:null, length:null, secret:null, winner:null,
+    roomCode:null, peer:null, conn:null, connections:new Map(), isOwner:false, mode:'manual',
+    myId:null, myName:null, length:null, secret:null, winner:null,
     allGuesses:[], myHistory:[], othersHistory:[], chat:[]
   };
   const hostSetupEl = document.getElementById('host-setup');
   const hostOwnerViewEl = document.getElementById('host-owner-view');
   const hostGuesserViewEl = document.getElementById('host-guesser-view');
 
+  let hostSetupMode = 'manual';
+  function renderHostModePicker() {
+    const wrap = document.getElementById('host-mode-picker');
+    const createBtn = document.getElementById('host-create');
+    const descEl = document.getElementById('host-mode-desc');
+    wrap.querySelectorAll('.length-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        hostSetupMode = btn.dataset.mode;
+        wrap.querySelectorAll('.length-btn').forEach(b => b.classList.toggle('selected', b === btn));
+        if (hostSetupMode === 'auto') {
+          createBtn.textContent = '開始遊戲';
+          descEl.textContent = '選好位數後，電腦提供一組不重複數字的題目，房主和其他玩家一起搶答。';
+        } else {
+          createBtn.textContent = '開始遊戲';
+          descEl.textContent = '由你自訂一組密碼，其他人一起搶答，你可以即時看到大家的猜測。';
+        }
+      });
+    });
+  }
+  renderHostModePicker();
+
   function hostResetState() {
     try { if (host.conn) host.conn.close(); } catch(e) {}
     host.connections.forEach(c => { try { c.close(); } catch(e) {} });
     try { if (host.peer) host.peer.destroy(); } catch(e) {}
     Object.assign(host, {
-      roomCode:null, peer:null, conn:null, connections:new Map(), isOwner:false,
-      mode:'manual', myId:null, myName:null, length:null, secret:null, winner:null,
+      roomCode:null, peer:null, conn:null, connections:new Map(), isOwner:false, mode:'manual',
+      myId:null, myName:null, length:null, secret:null, winner:null,
       allGuesses:[], myHistory:[], othersHistory:[], chat:[]
     });
   }
@@ -1209,33 +1225,21 @@
     const lengthCard = document.getElementById('host-length-card');
     const secretCard = document.getElementById('host-secret-card');
     const board = document.getElementById('host-owner-board');
-    const ownerGuessCard = document.getElementById('host-owner-guess-card');
     const secretBadge = document.getElementById('host-secret-badge-wrap');
 
     if (!host.length) {
-      lengthCard.style.display = 'block'; secretCard.style.display = 'none'; board.style.display = 'none'; ownerGuessCard.style.display = 'none';
+      lengthCard.style.display = 'block'; secretCard.style.display = 'none'; board.style.display = 'none';
       secretBadge.style.display = 'none';
-    } else if (!host.secret && host.mode === 'manual') {
-      lengthCard.style.display = 'none'; secretCard.style.display = 'block'; board.style.display = 'none'; ownerGuessCard.style.display = 'none';
+    } else if (!host.secret) {
+      lengthCard.style.display = 'none'; secretCard.style.display = 'block'; board.style.display = 'none';
       secretBadge.style.display = 'none';
       setText('host-secret-label', `設定題目（${host.length} 位數不重複數字）`);
       const input = document.getElementById('host-secret-input'); input.maxLength = host.length; input.placeholder = '0'.repeat(host.length);
-    } else if (!host.secret && host.mode === 'computer') {
-      lengthCard.style.display = 'none'; secretCard.style.display = 'none'; board.style.display = 'none'; ownerGuessCard.style.display = 'none';
-      secretBadge.style.display = 'none';
     } else {
       lengthCard.style.display = 'none'; secretCard.style.display = 'none'; board.style.display = 'block';
-      if (host.mode === 'computer' && !host.winner) {
-        ownerGuessCard.style.display = 'block';
-        secretBadge.style.display = 'none';
-        setText('host-owner-guess-label', `房主猜測（${host.length} 位）`);
-        const guessInput = document.getElementById('host-owner-guess-input'); guessInput.maxLength = host.length; guessInput.placeholder = '0'.repeat(host.length);
-      } else {
-        ownerGuessCard.style.display = 'none';
-        if (host.mode === 'computer') secretBadge.style.display = 'none';
-        else { secretBadge.style.display = 'inline-flex'; setText('host-secret-top-val', host.secret); }
-      }
-      setText('host-board-secret-code', host.mode === 'computer' ? '電腦隨機出題' : host.secret);
+      secretBadge.style.display = 'inline-flex';
+      setText('host-secret-top-val', host.secret);
+      setText('host-board-secret-code', host.secret);
     }
 
     const replay = document.getElementById('host-replay');
@@ -1243,13 +1247,11 @@
 
     renderChat(document.getElementById('host-owner-chat-messages'), host.chat);
     const hist = document.getElementById('host-owner-history'), empty = document.getElementById('host-owner-empty');
-    if (!host.allGuesses.length) { hist.innerHTML = ''; empty.style.display = 'block'; }
-    else { empty.style.display = 'none'; renderOthersHistory(hist, host.allGuesses); }
-
-    const ownerMyHist = document.getElementById('host-owner-my-history'), ownerMyEmpty = document.getElementById('host-owner-my-empty');
-    if (ownerMyHist && ownerMyEmpty) {
-      if (host.myHistory.length) { ownerMyEmpty.style.display = 'none'; renderHistory(ownerMyHist, host.myHistory, 'host-owner-digit-tracker'); }
-      else { ownerMyEmpty.style.display = 'block'; ownerMyHist.innerHTML = ''; }
+    if (!host.allGuesses.length) {
+      hist.innerHTML = ''; empty.style.display = 'block';
+    } else {
+      empty.style.display = 'none';
+      renderOthersHistory(hist, host.allGuesses);
     }
   }
 
@@ -1259,7 +1261,7 @@
     const card = document.getElementById('host-guess-card');
     const noteCard = document.getElementById('host-guesser-note-card');
     const win = document.getElementById('host-win');
-    const connected = !!(host.conn && host.conn.open);
+    const connected = host.isOwner ? true : !!(host.conn && host.conn.open);
 
     dot.classList.toggle('ready', connected && !!host.secret);
     if (host.winner) {
@@ -1272,9 +1274,9 @@
       if (!connected) {
         status.textContent = '正在連線房主…'; card.style.display = 'none'; noteCard.style.display = 'none';
       } else if (host.secret) {
-        status.textContent = `${host.mode === 'computer' ? '電腦' : '出題者'}已準備題目（${host.length} 位），開始猜！`; card.style.display = 'block'; noteCard.style.display = 'block';
+        status.textContent = `題目已就緒（${host.length} 位），開始猜！`; card.style.display = 'block'; noteCard.style.display = 'block';
       } else if (host.length) {
-        status.textContent = host.mode === 'computer' ? `電腦正在產生 ${host.length} 位題目…` : `出題者正在設定 ${host.length} 位題目…`; card.style.display = 'none'; noteCard.style.display = 'none';
+        status.textContent = `出題者正在設定 ${host.length} 位題目…`; card.style.display = 'none'; noteCard.style.display = 'none';
       } else {
         status.textContent = '出題者尚未選擇位數…'; card.style.display = 'none'; noteCard.style.display = 'none';
       }
@@ -1308,10 +1310,8 @@
     const nameInput = document.getElementById('host-name-input');
     const name = nameInput.value.trim();
     if (!name) { errEl.textContent = '請先輸入你的名稱。'; nameInput.focus(); return; }
-    const selectedMode = host.mode || 'manual';
-    hostResetState();
-    host.mode = selectedMode;
-    host.isOwner = true; host.myId = 'host-' + randomPlayerId(); host.myName = name; host.roomCode = randomRoomCode();
+    hostResetState(); host.isOwner = true; host.myName = name; host.myId = randomPlayerId(); host.roomCode = randomRoomCode();
+    host.mode = hostSetupMode;
     host.peer = new Peer(PEER_PREFIX + 'host-' + host.roomCode);
     host.peer.on('open', () => {
       hostSetupEl.style.display = 'none'; hostOwnerViewEl.style.display = 'block';
@@ -1321,7 +1321,7 @@
     host.peer.on('connection', conn => {
       conn.on('open', () => {
         host.connections.set(conn.peer, conn);
-        conn.send({type:'config', length:host.length, ready:!!host.secret, winner:host.winner, mode:host.mode});
+        conn.send({type:'config', length:host.length, ready:!!host.secret, winner:host.winner});
         host.chat.forEach(msg => conn.send({type:'chat', ...msg}));
       });
       conn.on('data', data => {
@@ -1330,20 +1330,21 @@
           const msg = {name:String(data.name || '玩家').slice(0,10), text:String(data.text || '').slice(0,120), time:String(data.time || nowTime())};
           host.chat.push(msg);
           broadcastHost({type:'chat', ...msg});
-          updateHostOwnerUI();
+          if (host.mode === 'auto') updateHostGuesserUI(); else updateHostOwnerUI();
           return;
         }
         if (data.type === 'guess') {
           if (!host.secret || host.winner || !isValidCode(data.guess, host.length)) return;
           const r = scoreGuess(host.secret, data.guess);
           host.allGuesses.push({ name: data.name, playerId: data.playerId, guess: data.guess, a: r.a, b: r.b });
+          if (host.mode === 'auto') host.othersHistory.push({ name: data.name, guess: data.guess, a: r.a, b: r.b });
           conn.send({type:'guessResult', guess:data.guess, a:r.a, b:r.b});
           broadcastHost({type:'guessBroadcast', playerId:data.playerId, name:data.name, guess:data.guess, a:r.a, b:r.b});
           if (r.a === host.length && !host.winner) {
             host.winner = {playerId:data.playerId, name:data.name, answer:host.secret};
             broadcastHost({type:'winner', winner:host.winner});
           }
-          updateHostOwnerUI();
+          if (host.mode === 'auto') updateHostGuesserUI(); else updateHostOwnerUI();
         }
       });
       conn.on('close', () => host.connections.delete(conn.peer));
@@ -1355,32 +1356,26 @@
   }
 
   function hostChooseLength(n) {
-    host.length = n; host.secret = null; host.winner = null; host.allGuesses = [];
-    if (host.mode === 'computer') {
+    host.length = n; host.winner = null; host.allGuesses = [];
+    if (host.mode === 'auto') {
       host.secret = generateUniqueSecret(n);
+      host.myHistory = []; host.othersHistory = [];
+      broadcastHost({type:'config', length:n, ready:true, winner:null});
+      hostOwnerViewEl.style.display = 'none';
+      hostGuesserViewEl.style.display = 'block';
+      setText('host-my-name-badge', host.myName || '你');
+      document.getElementById('host-guesser-share-row').style.display = 'flex';
+      setText('host-guesser-room-code', host.roomCode);
+      document.getElementById('host-guess-error').textContent = '';
+      document.getElementById('host-notes-text').value = '';
+      setupDigitTracker('host-digit-tracker', 'host-notes-reset', () => updateHostGuesserUI());
+      updateHostGuesserUI();
+      document.getElementById('host-guess-input').focus();
+    } else {
+      host.secret = null;
+      broadcastHost({type:'config', length:n, ready:false, winner:null});
+      updateHostOwnerUI();
     }
-    broadcastHost({type:'config', length:n, ready:!!host.secret, winner:null, mode:host.mode});
-    updateHostOwnerUI();
-  }
-
-  function handleHostOwnerGuessSubmit() {
-    const input = document.getElementById('host-owner-guess-input');
-    const errEl = document.getElementById('host-owner-guess-error');
-    const val = input.value.trim(); errEl.textContent = '';
-    if (!host.isOwner || host.mode !== 'computer') return;
-    if (!host.length || !host.secret) { errEl.textContent = '電腦尚未準備好題目。'; return; }
-    if (!isValidCode(val, host.length)) { errEl.textContent = `請輸入 ${host.length} 位數不重複的數字。`; return; }
-    if (host.winner) { errEl.textContent = '這一局已經有人猜中了。'; return; }
-    const r = scoreGuess(host.secret, val);
-    host.myHistory.push({guess:val, a:r.a, b:r.b});
-    host.allGuesses.push({name:host.myName, playerId:host.myId, guess:val, a:r.a, b:r.b});
-    broadcastHost({type:'guessBroadcast', playerId:host.myId, name:host.myName, guess:val, a:r.a, b:r.b});
-    input.value = '';
-    if (r.a === host.length) {
-      host.winner = {playerId:host.myId, name:host.myName, answer:host.secret};
-      broadcastHost({type:'winner', winner:host.winner});
-    }
-    updateHostOwnerUI();
   }
 
   function hostJoinRoom() {
@@ -1401,7 +1396,7 @@
         if (!data || typeof data !== 'object') return;
         if (data.type === 'config') {
           const wasRoundReset = !data.ready && !data.winner;
-          host.length = data.length; host.secret = data.ready ? true : null; host.winner = data.winner || null; host.mode = data.mode || 'manual';
+          host.length = data.length; host.secret = data.ready ? true : null; host.winner = data.winner || null;
           if (wasRoundReset) {
             host.myHistory = []; host.othersHistory = [];
             document.getElementById('host-guess-error').textContent = '';
@@ -1426,8 +1421,9 @@
     host.peer.on('error', err => { if (err && (err.type === 'peer-unavailable' || err.type === 'network')) setText('host-guesser-status', '找不到房間或網路連線失敗'); });
   }
 
-  function sendHostChat(isOwner) {
-    const prefix = isOwner ? 'host-owner' : 'host-guesser';
+  function sendHostChat() {
+    const isOwner = host.isOwner;
+    const prefix = isOwner ? (host.mode === 'auto' ? 'host-guesser' : 'host-owner') : 'host-guesser';
     const input = document.getElementById(prefix + '-chat-input');
     const text = input.value.trim();
     if (!text) return;
@@ -1435,7 +1431,7 @@
     if (isOwner) {
       host.chat.push({name:msg.name, text:msg.text, time:msg.time});
       broadcastHost(msg);
-      updateHostOwnerUI();
+      if (host.mode === 'auto') updateHostGuesserUI(); else updateHostOwnerUI();
     } else if (host.conn && host.conn.open) {
       host.chat.push({name:msg.name, text:msg.text, time:msg.time});
       host.conn.send(msg);
@@ -1443,38 +1439,34 @@
     } else return;
     input.value = ''; input.focus();
   }
-  document.getElementById('host-owner-chat-send').addEventListener('click', () => sendHostChat(true));
-  document.getElementById('host-guesser-chat-send').addEventListener('click', () => sendHostChat(false));
-  document.getElementById('host-owner-chat-input').addEventListener('keydown', e => { if (e.key === 'Enter') sendHostChat(true); });
-  document.getElementById('host-guesser-chat-input').addEventListener('keydown', e => { if (e.key === 'Enter') sendHostChat(false); });
+  document.getElementById('host-owner-chat-send').addEventListener('click', sendHostChat);
+  document.getElementById('host-guesser-chat-send').addEventListener('click', sendHostChat);
+  document.getElementById('host-owner-chat-input').addEventListener('keydown', e => { if (e.key === 'Enter') sendHostChat(); });
+  document.getElementById('host-guesser-chat-input').addEventListener('keydown', e => { if (e.key === 'Enter') sendHostChat(); });
 
-  document.getElementById('host-mode-manual').addEventListener('click', () => {
-    host.mode = 'manual';
-    document.getElementById('host-mode-manual').classList.remove('btn-secondary');
-    document.getElementById('host-mode-computer').classList.add('btn-secondary');
-    document.getElementById('host-mode-hint').textContent = '自己設定一組不重複數字作為題目。';
-  });
-  document.getElementById('host-mode-computer').addEventListener('click', () => {
-    host.mode = 'computer';
-    document.getElementById('host-mode-computer').classList.remove('btn-secondary');
-    document.getElementById('host-mode-manual').classList.add('btn-secondary');
-    document.getElementById('host-mode-hint').textContent = '由電腦隨機產生不重複數字，其他玩家負責猜題。';
-  });
   document.getElementById('host-create').addEventListener('click', hostCreateRoom);
   document.getElementById('host-join').addEventListener('click', hostJoinRoom);
-  document.getElementById('host-owner-guess-submit').addEventListener('click', handleHostOwnerGuessSubmit);
-  document.getElementById('host-owner-guess-input').addEventListener('keydown', e => { if (e.key === 'Enter') handleHostOwnerGuessSubmit(); });
-  restrictNumeric(document.getElementById('host-owner-guess-input'));
 
   function hostStartNextRound() {
     if (!host.isOwner || !host.length) return;
-    host.secret = host.mode === 'computer' ? generateUniqueSecret(host.length) : null;
     host.winner = null; host.allGuesses = [];
-    broadcastHost({type:'config', length:host.length, ready:!!host.secret, winner:null, mode:host.mode});
-    updateHostOwnerUI();
-    document.getElementById('host-secret-input').value = '';
-    document.getElementById('host-secret-error').textContent = '';
-    if (host.mode === 'manual') document.getElementById('host-secret-input').focus();
+    if (host.mode === 'auto') {
+      host.secret = generateUniqueSecret(host.length);
+      host.myHistory = []; host.othersHistory = [];
+      broadcastHost({type:'config', length:host.length, ready:true, winner:null});
+      document.getElementById('host-guess-error').textContent = '';
+      document.getElementById('host-notes-text').value = '';
+      setupDigitTracker('host-digit-tracker', 'host-notes-reset', () => updateHostGuesserUI());
+      updateHostGuesserUI();
+      document.getElementById('host-guess-input').focus();
+    } else {
+      host.secret = null;
+      broadcastHost({type:'config', length:host.length, ready:false, winner:null});
+      updateHostOwnerUI();
+      document.getElementById('host-secret-input').value = '';
+      document.getElementById('host-secret-error').textContent = '';
+      document.getElementById('host-secret-input').focus();
+    }
   }
 
   document.getElementById('host-replay').addEventListener('click', hostStartNextRound);
@@ -1482,43 +1474,57 @@
   document.getElementById('host-secret-submit').addEventListener('click', () => {
     const input = document.getElementById('host-secret-input'), errEl = document.getElementById('host-secret-error'), val = input.value.trim(); errEl.textContent = '';
     if (!host.length || !isValidCode(val, host.length)) { errEl.textContent = `請輸入 ${host.length||4} 位不重複的數字。`; return; }
-    if (host.mode !== 'manual') return;
     host.secret = val; host.winner = null; host.allGuesses = []; input.value = '';
-    broadcastHost({type:'config', length:host.length, ready:true, winner:null, mode:host.mode});
+    broadcastHost({type:'config', length:host.length, ready:true, winner:null});
     updateHostOwnerUI();
   });
 
   function handleHostGuessSubmit() {
     const input = document.getElementById('host-guess-input'), errEl = document.getElementById('host-guess-error'), val = input.value.trim(); errEl.textContent = '';
-    if (!host.conn || !host.conn.open) { errEl.textContent = '尚未連上房主。'; return; }
-    if (!host.length || !host.secret) { errEl.textContent = '出題者還沒設定題目。'; return; }
+    if (!host.length || !host.secret) { errEl.textContent = '題目尚未設定。'; return; }
     if (!isValidCode(val, host.length)) { errEl.textContent = `請輸入 ${host.length} 位數不重複的數字。`; return; }
     if (host.winner) { errEl.textContent = '已經有人猜中了。'; return; }
-    host.conn.send({type:'guess', playerId:host.myId, name:host.myName, guess:val}); input.value = '';
+    if (host.isOwner) {
+      const r = scoreGuess(host.secret, val);
+      host.myHistory.push({guess:val, a:r.a, b:r.b});
+      host.allGuesses.push({name:host.myName, playerId:host.myId, guess:val, a:r.a, b:r.b});
+      broadcastHost({type:'guessBroadcast', playerId:host.myId, name:host.myName, guess:val, a:r.a, b:r.b});
+      if (r.a === host.length && !host.winner) {
+        host.winner = {playerId:host.myId, name:host.myName, answer:host.secret};
+        broadcastHost({type:'winner', winner:host.winner});
+      }
+      input.value = '';
+      updateHostGuesserUI();
+    } else {
+      if (!host.conn || !host.conn.open) { errEl.textContent = '尚未連上房主。'; return; }
+      host.conn.send({type:'guess', playerId:host.myId, name:host.myName, guess:val}); input.value = '';
+    }
   }
 
   document.getElementById('host-guess-submit').addEventListener('click', handleHostGuessSubmit);
 
   function resetHostUI() {
     hostResetState(); hostOwnerViewEl.style.display = 'none'; hostGuesserViewEl.style.display = 'none'; hostSetupEl.style.display = 'block';
-    document.getElementById('host-length-card').style.display = 'block'; document.getElementById('host-secret-card').style.display = 'none'; document.getElementById('host-owner-board').style.display = 'none'; document.getElementById('host-owner-guess-card').style.display = 'none';
+    document.getElementById('host-length-card').style.display = 'block'; document.getElementById('host-secret-card').style.display = 'none'; document.getElementById('host-owner-board').style.display = 'none';
     document.getElementById('host-secret-badge-wrap').style.display = 'none';
     document.getElementById('host-length-picker').innerHTML = ''; document.getElementById('host-length-error').textContent = '';
-    host.mode = 'manual';
-    document.getElementById('host-mode-manual').classList.remove('btn-secondary');
-    document.getElementById('host-mode-computer').classList.add('btn-secondary');
-    document.getElementById('host-mode-hint').textContent = '自己設定一組不重複數字作為題目。';
     document.getElementById('host-secret-input').maxLength = 4; document.getElementById('host-secret-input').placeholder = '0000';
     document.getElementById('host-guess-input').maxLength = 4; document.getElementById('host-guess-input').placeholder = '0000';
     document.getElementById('host-owner-history').innerHTML = ''; document.getElementById('host-my-history').innerHTML = ''; document.getElementById('host-others-history').innerHTML = '';
     document.getElementById('host-win').style.display = 'none'; document.getElementById('host-secret-input').value = ''; document.getElementById('host-guess-input').value = '';
     document.getElementById('host-notes-text').value = '';
+    document.getElementById('host-guesser-share-row').style.display = 'none';
+    hostSetupMode = 'manual';
+    document.querySelectorAll('#host-mode-picker .length-btn').forEach(b => b.classList.toggle('selected', b.dataset.mode === 'manual'));
+    document.getElementById('host-create').textContent = '開始遊戲';
+    document.getElementById('host-mode-desc').textContent = '由你自訂一組密碼，其他人一起搶答，你可以即時看到大家的猜測。';
     setupDigitTracker('host-digit-tracker', 'host-notes-reset', () => updateHostGuesserUI());
   }
 
   document.getElementById('host-owner-leave').addEventListener('click', resetHostUI);
   document.getElementById('host-guesser-leave').addEventListener('click', resetHostUI);
   document.getElementById('host-copy').addEventListener('click', () => copyText(host.roomCode, document.getElementById('host-copy')));
+  document.getElementById('host-guesser-copy').addEventListener('click', () => copyText(host.roomCode, document.getElementById('host-guesser-copy')));
   restrictNumeric(document.getElementById('host-secret-input'));
   restrictNumeric(document.getElementById('host-guess-input'));
 
