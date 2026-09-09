@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
-<title>1A2B - 多人對戰與多人搶答</title>
+<title>1A2B</title>
 <style>
   :root {
     --ink: #16181d;
@@ -159,16 +159,15 @@
   </header>
   <div class="tabs">
     <button class="tab active" data-tab="solo">單機模式</button>
-    <button class="tab" data-tab="duel">對戰模式 (1v1)</button>
-    <button class="tab" data-tab="host">多人模式 (最多10人)</button>
+    <button class="tab" data-tab="duel">對戰模式</button>
+    <button class="tab" data-tab="host">多人模式</button>
   </div>
 
-  <!-- 單機模式 -->
   <div class="panel active" id="panel-solo">
     <div id="solo-setup">
       <div class="card">
         <div class="card-label">單機模式</div>
-        <p class="desc">由電腦隨機產生一組「數字不重複」的答案。先選擇 3～9 位數，再開始挑戰。</p>
+        <p class="desc">請選擇 3～9 位數，由電腦隨機產生一組「數字不重複」的答案。</p>
         <div class="card-label">選擇猜幾位數</div>
         <div class="length-picker" id="solo-length-picker"></div>
         <button class="btn" id="solo-start" disabled>開始遊戲</button>
@@ -195,7 +194,7 @@
         </div>
         <div class="card" id="solo-note-card">
           <div class="digit-tracker-legend">
-            <span class="card-label" style="margin-bottom:0;">📝 劃記筆記</span>
+            <span class="card-label" style="margin-bottom:0;">📝 筆記</span>
             <button type="button" class="copy-btn" id="solo-notes-reset" style="padding:2px 8px; font-size:11px;">重設劃記</button>
           </div>
           <div class="digit-tracker" id="solo-digit-tracker"></div>
@@ -210,11 +209,10 @@
     </div>
   </div>
 
-  <!-- 對戰模式 (1v1) -->
   <div class="panel" id="panel-duel">
     <div id="duel-setup">
       <div class="card">
-        <div class="card-label">開始 1v1 對戰</div>
+        <div class="card-label">雙人 1v1 對戰</div>
         <p class="desc">建立房間後，把房號傳給朋友即可開始雙方互猜對戰。</p>
         <div class="card-label" style="margin-top:12px;">你的名稱</div>
         <input type="text" id="duel-name-input" placeholder="輸入你的名稱" maxlength="10" autocomplete="nickname">
@@ -259,12 +257,12 @@
             <div class="card">
               <div class="card-label" id="duel-spectator-a-label">玩家 A</div>
               <div class="history" id="duel-spectator-a-history"></div>
-              <div class="empty-state" id="duel-spectator-a-empty">尚無猜測</div>
+              <div class="empty-state" id="duel-spectator-a-empty">尚無玩家猜測</div>
             </div>
             <div class="card">
               <div class="card-label" id="duel-spectator-b-label">玩家 B</div>
               <div class="history" id="duel-spectator-b-history"></div>
-              <div class="empty-state" id="duel-spectator-b-empty">尚無猜測</div>
+              <div class="empty-state" id="duel-spectator-b-empty">尚無玩家猜測</div>
             </div>
           </div>
         </div>
@@ -285,14 +283,14 @@
         <div class="error-msg" id="duel-length-error"></div>
       </div>
       <div class="card" id="duel-secret-card">
-        <div class="card-label" id="duel-secret-label">你的密碼（選擇位數後設定）</div>
+        <div class="card-label" id="duel-secret-label">請設定你的密碼</div>
         <input type="text" id="duel-secret-input" inputmode="numeric" maxlength="4" placeholder="0000" autocomplete="off">
         <button class="btn" id="duel-secret-submit">鎖定密碼</button>
         <div class="error-msg" id="duel-secret-error"></div>
       </div>
       <div id="duel-play" style="display:none;">
         <div id="duel-win" style="display:none;" class="win-banner"></div>
-        <button class="btn" id="duel-replay" style="display:none; margin-bottom:12px;">再玩一局（保留房間）</button>
+        <button class="btn" id="duel-replay" style="display:none; margin-bottom:12px;">再玩一局</button>
         
         <div id="duel-turn-banner" class="turn-banner turn-my">
           <span class="lamp" id="duel-banner-lamp"></span>
@@ -331,9 +329,9 @@
         </div>
         <div class="card chat-card">
           <div class="card-label">💬 聊天室</div>
-          <div class="chat-messages" id="duel-chat-messages"><div class="chat-empty">尚無留言</div></div>
+          <div class="chat-messages" id="duel-chat-messages"><div class="chat-empty">尚無玩家留言</div></div>
           <div class="chat-input-row">
-            <input type="text" id="duel-chat-input" maxlength="120" placeholder="輸入留言…" autocomplete="off">
+            <input type="text" id="duel-chat-input" maxlength="100" placeholder="請輸入留言…" autocomplete="off">
             <button class="btn" id="duel-chat-send">送出</button>
           </div>
         </div>
@@ -342,21 +340,20 @@
     </div>
   </div>
 
-  <!-- 多人模式 (支援最多10人連線) -->
   <div class="panel" id="panel-host">
     <div id="host-setup">
       <div class="card">
         <div class="card-label">多人猜題/搶答模式（可支援 10 人）</div>
-        <p class="desc">建立房間讓朋友加入（最高可支援10位）。可選擇「房主出題」或「電腦出題」，所有人一起競速搶答，第一個完全猜中的玩家獲勝！</p>
+        <p class="desc">建立房間讓朋友加入，可選擇「房主出題」或「電腦出題」，第一個完全猜中的玩家獲勝！</p>
         <div class="card-label">選擇出題方式</div>
         <div class="length-picker" id="host-mode-picker" style="margin-bottom:10px;">
           <button type="button" class="length-btn selected" data-mode="manual" style="flex:1 1 45%; font-size:14px; padding:12px 4px;">房主出題</button>
-          <button type="button" class="length-btn" data-mode="auto" style="flex:1 1 45%; font-size:14px; padding:12px 4px;">電腦出題 (房主一起猜)</button>
+          <button type="button" class="length-btn" data-mode="auto" style="flex:1 1 45%; font-size:14px; padding:12px 4px;">電腦出題</button>
         </div>
-        <p class="desc" id="host-mode-desc" style="margin-bottom:16px;">由房主自訂一組密碼，大家一起搶答，房主可即時觀看所有玩家進度。</p>
+        <p class="desc" id="host-mode-desc" style="margin-bottom:16px;">房主自訂一組密碼，玩家們一起搶答，房主可即時觀看所有玩家猜測過程。</p>
         <div class="card-label">你的名稱</div>
         <input type="text" id="host-name-input" placeholder="輸入你的暱稱" maxlength="10" autocomplete="nickname">
-        <button class="btn" id="host-create">建立多人房間</button>
+        <button class="btn" id="host-create">開始遊戲</button>
         <div class="row" style="margin-top:14px;">
           <input type="text" id="host-join-code" placeholder="輸入房號加入" maxlength="8" style="letter-spacing:0.2em; font-size:16px;">
           <button class="btn btn-secondary" id="host-join" style="margin-top:0; flex:0 0 auto; width:auto; padding:0 18px;">加入遊戲</button>
@@ -365,7 +362,6 @@
       </div>
     </div>
 
-    <!-- 房主出題者畫面 (房主出題模式下專用) -->
     <div id="host-owner-view" style="display:none;">
       <div class="card">
         <div class="status-line">
@@ -385,7 +381,7 @@
       </div>
       <div class="card" id="host-length-card">
         <div class="card-label">選擇題目位數</div>
-        <p class="desc" style="margin-bottom:12px;">請決定本局要猜幾位數（3 至 9 位數字不重複）。</p>
+        <p class="desc" style="margin-bottom:12px;">請決定本局要猜幾位數（3 到 9 位不重複數字）。</p>
         <div class="length-picker" id="host-length-picker"></div>
         <div class="error-msg" id="host-length-error"></div>
       </div>
@@ -401,22 +397,21 @@
           <div style="font-size:12px; color:var(--paper-dim);">正確答案：<strong class="digits" id="host-board-secret-code" style="color:var(--brass-bright); font-size:16px;"></strong></div>
         </div>
         <div id="host-owner-win-banner" style="display:none;" class="win-banner"></div>
-        <button class="btn" id="host-owner-replay" style="display:none; margin-bottom:12px;">再出一題（保留房間）</button>
+        <button class="btn" id="host-owner-replay" style="display:none; margin-bottom:12px;">再玩一局</button>
         <div class="history" id="host-owner-history"></div>
         <div class="empty-state" id="host-owner-empty">目前尚未有玩家猜題</div>
       </div>
       <div class="card chat-card">
-        <div class="card-label">💬 多人聊天室</div>
-        <div class="chat-messages" id="host-owner-chat-messages"><div class="chat-empty">尚無留言</div></div>
+        <div class="card-label">💬 聊天室</div>
+        <div class="chat-messages" id="host-owner-chat-messages"><div class="chat-empty">尚無玩家留言</div></div>
         <div class="chat-input-row">
-          <input type="text" id="host-owner-chat-input" maxlength="100" placeholder="輸入留言…" autocomplete="off">
+          <input type="text" id="host-owner-chat-input" maxlength="100" placeholder="請輸入留言…" autocomplete="off">
           <button class="btn" id="host-owner-chat-send">送出</button>
         </div>
       </div>
-      <button class="btn btn-danger" id="host-owner-leave" style="margin-top:8px;">關閉並離開房間</button>
+      <button class="btn btn-danger" id="host-owner-leave" style="margin-top:8px;">離開房間</button>
     </div>
 
-    <!-- 玩家視角 / 電腦出題時的房主視角 -->
     <div id="host-guesser-view" style="display:none;">
       <div class="card">
         <div class="status-line">
@@ -429,8 +424,7 @@
         </div>
       </div>
       <div id="host-win" style="display:none;" class="win-banner"></div>
-      
-      <!-- 房主在電腦出題模式下的控制按鈕 -->
+
       <div id="host-owner-auto-controls" style="display:none; margin-bottom: 12px;">
         <div class="card" id="host-auto-length-picker-card" style="margin-bottom: 12px;">
           <div class="card-label">房主選擇題目位數</div>
@@ -438,12 +432,12 @@
         </div>
         <div class="row">
           <button class="btn btn-secondary" id="host-reveal-answer" style="display:none;">公布答案</button>
-          <button class="btn" id="host-replay" style="display:none;">下一局電腦出題</button>
+          <button class="btn" id="host-replay" style="display:none;">再玩一局</button>
         </div>
       </div>
 
       <div class="card" id="host-guess-card" style="display:none;">
-        <div class="card-label" id="host-guess-label">輸入你的猜測</div>
+        <div class="card-label" id="host-guess-label">請輸入你的猜測</div>
         <input type="text" id="host-guess-input" inputmode="numeric" maxlength="4" placeholder="0000" autocomplete="off">
         <button class="btn" id="host-guess-submit">送出猜測</button>
         <div class="error-msg" id="host-guess-error"></div>
@@ -451,7 +445,7 @@
       
       <div class="card" id="host-guesser-note-card" style="display:none;">
         <div class="digit-tracker-legend">
-          <span class="card-label" style="margin-bottom:0;">📝 劃記筆記</span>
+          <span class="card-label" style="margin-bottom:0;">📝 筆記</span>
           <button type="button" class="copy-btn" id="host-notes-reset" style="padding:2px 8px; font-size:11px;">重設劃記</button>
         </div>
         <div class="digit-tracker" id="host-digit-tracker"></div>
@@ -470,10 +464,10 @@
         <div class="empty-state" id="host-others-empty">尚未有其他人猜測</div>
       </div>
       <div class="card chat-card">
-        <div class="card-label">💬 多人聊天室</div>
-        <div class="chat-messages" id="host-guesser-chat-messages"><div class="chat-empty">尚無留言</div></div>
+        <div class="card-label">💬 聊天室</div>
+        <div class="chat-messages" id="host-guesser-chat-messages"><div class="chat-empty">尚無玩家留言</div></div>
         <div class="chat-input-row">
-          <input type="text" id="host-guesser-chat-input" maxlength="100" placeholder="輸入留言…" autocomplete="off">
+          <input type="text" id="host-guesser-chat-input" maxlength="100" placeholder="請輸入留言…" autocomplete="off">
           <button class="btn" id="host-guesser-chat-send">送出</button>
         </div>
       </div>
@@ -486,10 +480,10 @@
     <div class="rules-body">
       <b>A</b> 代表「數字對、位置也對」；<b>B</b> 代表「數字對、位置不對」。<br>
       題目答案必須為不重複之數字，例如 1234、0987。<br>
-      <b>單機模式：</b>與電腦練習猜題。<br>
-      <b>對戰模式 (1v1)：</b>兩人輪流猜對方的秘密數字，先完整猜中者獲勝。<br>
+      <b>單機模式：</b>玩家選擇密碼位數，由電腦隨機出題。<br>
+      <b>對戰模式 (1v1)：</b>兩人輪流猜對方設定的密碼，先完整猜中者獲勝。<br>
       <b>多人模式 (最多10人)：</b><br>
-      - <b>房主出題：</b>由房主訂定數字，其他多位玩家線上競速搶答。<br>
+      - <b>房主出題：</b>由房主設定密碼，其他多位玩家線上搶答，先完整猜中者獲勝。<br>
       - <b>電腦出題：</b>由電腦自動產生題目，包含房主在內的所有玩家一起參與搶答！
     </div>
   </details>
@@ -501,7 +495,7 @@
   "use strict";
 
   const PEER_PREFIX = 'onea2b-';
-  const MAX_HOST_PLAYERS = 10; // 多人上限
+  const MAX_HOST_PLAYERS = 10; 
 
   function isValidCode(s, len) {
     len = len || 4;
@@ -569,7 +563,7 @@
   function renderChat(el, list) {
     if (!el) return;
     if (!list || list.length === 0) {
-      el.innerHTML = '<div class="chat-empty">尚無留言</div>';
+      el.innerHTML = '<div class="chat-empty">尚無玩家留言</div>';
       return;
     }
     el.innerHTML = list.map(m => `<div class="chat-message"><div class="chat-message-head"><span class="chat-name">${escapeHtml(m.name || '玩家')}</span><span class="chat-time">${escapeHtml(m.time || '')}</span></div><div class="chat-text">${escapeHtml(m.text)}</div></div>`).join('');
@@ -634,7 +628,6 @@
     }
   }
 
-  // 頁面 Tab 切換
   document.querySelectorAll('.tab').forEach(tab => {
     tab.addEventListener('click', () => {
       document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -644,9 +637,6 @@
     });
   });
 
-  /* ==========================================================================
-     1. 單機模式
-     ========================================================================== */
   const solo = { length:null, secret:null, history:[], won:false, answerRevealed:false };
   const soloSetupEl = document.getElementById('solo-setup');
   const soloGameEl = document.getElementById('solo-game');
@@ -693,7 +683,7 @@
       input.disabled = true; submit.disabled = true;
     } else if (solo.answerRevealed) {
       win.style.display = 'block';
-      win.textContent = `🔓 答案為：${solo.secret}`;
+      win.textContent = `🔓答案為：${solo.secret}`;
       input.disabled = true; submit.disabled = true;
     } else {
       win.style.display = 'none'; input.disabled = false; submit.disabled = false;
@@ -747,9 +737,6 @@
     document.getElementById('solo-start').disabled = !solo.length;
   });
 
-  /* ==========================================================================
-     2. 對戰模式 (1v1)
-     ========================================================================== */
   const duel = {
     roomCode: null, role: null, peer: null, conn: null, spectators: new Map(),
     length: null, mySecret: null, mySecretReady: false, oppSecretReady: false,
@@ -1032,9 +1019,6 @@
   });
   document.getElementById('duel-copy').addEventListener('click', () => copyText(duel.roomCode, document.getElementById('duel-copy')));
 
-  /* ==========================================================================
-     3. 多人模式 (最多10人連線 - 支援房主出題 / 電腦出題)
-     ========================================================================== */
   const host = {
     roomCode: null, peer: null, conn: null, connections: new Map(), isOwner: false, mode: 'manual',
     myId: null, myName: null, length: null, secret: null, winner: null,
@@ -1053,9 +1037,9 @@
         hostSetupMode = btn.dataset.mode;
         wrap.querySelectorAll('.length-btn').forEach(b => b.classList.toggle('selected', b === btn));
         if (hostSetupMode === 'auto') {
-          descEl.textContent = '電腦自動出題，包含房主在內的所有玩家一起搶答！';
+          descEl.textContent = '由電腦自動產生題目，包含房主在內的所有玩家一起參與搶答！';
         } else {
-          descEl.textContent = '由房主自訂一組密碼，大家一起搶答，房主可即時觀看所有人猜測過程。';
+          descEl.textContent = '房主自訂一組密碼，玩家們一起搶答，房主可即時觀看所有玩家猜測過程。';
         }
       });
     });
@@ -1110,7 +1094,7 @@
     } else if (!host.secret) {
       lengthCard.style.display = 'none'; secretCard.style.display = 'block'; board.style.display = 'none';
       secretBadge.style.display = 'none';
-      setText('host-secret-label', `設定題目（${host.length} 位數不重複數字）`);
+      setText('host-secret-label', `請設定題目（${host.length} 位數不重複數字）`);
       const input = document.getElementById('host-secret-input'); input.maxLength = host.length; input.placeholder = '0'.repeat(host.length);
     } else {
       lengthCard.style.display = 'none'; secretCard.style.display = 'none'; board.style.display = 'block';
@@ -1150,8 +1134,7 @@
     const connected = host.isOwner ? true : !!(host.conn && host.conn.open);
 
     dot.classList.toggle('ready', connected && !!host.secret);
-    
-    // 控制房主特有介面（電腦出題模式下）
+
     if (host.isOwner && host.mode === 'auto') {
       autoControls.style.display = 'block';
       revealBtn.style.display = (host.secret && !host.winner && !host.answerRevealed) ? 'block' : 'none';
@@ -1168,7 +1151,7 @@
       noteCard.style.display = 'none';
     } else if (host.answerRevealed) {
       win.style.display = 'block';
-      win.textContent = `🔓 房主已公布答案為：${host.secret}`;
+      win.textContent = `🔓房主已公布答案為：${host.secret}`;
       card.style.display = 'none';
       noteCard.style.display = 'none';
     } else {
@@ -1228,7 +1211,6 @@
         renderHostOwnerLengthPicker(); 
         updateHostOwnerUI();
       } else {
-        // 電腦出題模式：房主也直接進入玩家/猜題介面
         hostGuesserViewEl.style.display = 'block';
         setText('host-my-name-badge', host.myName + ' (房主)');
         document.getElementById('host-guesser-share-row').style.display = 'flex';
@@ -1239,7 +1221,6 @@
     });
 
     host.peer.on('connection', conn => {
-      // 限制 10 人以內
       if (host.connections.size >= MAX_HOST_PLAYERS - 1) {
         conn.on('open', () => {
           conn.send({type: 'error', message: '房間人數已達上限 (最多10人)'});
@@ -1515,7 +1496,7 @@
     
     hostSetupMode = 'manual';
     document.querySelectorAll('#host-mode-picker .length-btn').forEach(b => b.classList.toggle('selected', b.dataset.mode === 'manual'));
-    document.getElementById('host-mode-desc').textContent = '由房主自訂一組密碼，大家一起搶答，房主可即時觀看所有人猜測過程。';
+    document.getElementById('host-mode-desc').textContent = '房主自訂一組密碼，玩家們一起搶答，房主可即時觀看所有玩家猜測過程。';
     setupDigitTracker('host-digit-tracker', 'host-notes-reset', () => updateHostGuesserUI());
   }
 
