@@ -269,6 +269,41 @@
           <button class="copy-btn" id="duel-copy">複製房號</button>
         </div>
       </div>
+      <div id="duel-spectator-view" style="display:none;">
+        <div class="card">
+          <div class="status-line">
+            <span><span class="status-dot ready"></span><span id="duel-spectator-status">觀戰中</span></span>
+            <span class="player-badge">觀戰者</span>
+          </div>
+          <p class="desc" style="margin:8px 0 0;">你目前是觀戰者，可以即時觀看雙方猜測、回合與結果，但不能出題或猜測。</p>
+        </div>
+        <div id="duel-spectator-win" style="display:none;" class="win-banner"></div>
+        <div class="card">
+          <div class="card-label">對戰狀態</div>
+          <div id="duel-spectator-turn" class="turn-banner turn-opp" style="margin-bottom:12px;">等待遊戲開始…</div>
+          <div class="split">
+            <div class="card">
+              <div class="card-label" id="duel-spectator-a-label">玩家 A</div>
+              <div class="history" id="duel-spectator-a-history"></div>
+              <div class="empty-state" id="duel-spectator-a-empty">尚無猜測</div>
+            </div>
+            <div class="card">
+              <div class="card-label" id="duel-spectator-b-label">玩家 B</div>
+              <div class="history" id="duel-spectator-b-history"></div>
+              <div class="empty-state" id="duel-spectator-b-empty">尚無猜測</div>
+            </div>
+          </div>
+        </div>
+        <div class="card chat-card">
+          <div class="card-label">💬 聊天室</div>
+          <div class="chat-messages" id="duel-spectator-chat-messages"><div class="chat-empty">尚無留言</div></div>
+          <div class="chat-input-row">
+            <input type="text" id="duel-spectator-chat-input" maxlength="120" placeholder="輸入留言…" autocomplete="off">
+            <button class="btn" id="duel-spectator-chat-send">送出</button>
+          </div>
+        </div>
+      </div>
+
       <div class="card" id="duel-length-card">
         <div class="card-label">選擇猜幾位數</div>
         <p class="desc" style="margin-bottom:12px;">兩位玩家使用相同位數，範圍 3 到 9 位數。</p>
@@ -687,10 +722,10 @@
   restrictNumeric(document.getElementById('solo-guess-input'));
 
   const duel = {
-    roomCode: null, role: null, peer: null, conn: null,
+    roomCode: null, role: null, peer: null, conn: null, spectators: new Map(),
     length: null, mySecret: null, mySecretReady: false, oppSecretReady: false,
-    myName: null, oppName: null, myHistory: [], theirHistory: [], winner: null,
-    currentTurn: 'a', chat: [] 
+    myName: null, oppName: null, myHistory: [], theirHistory: [], winner: null, solvedMe: false, solvedOpp: false,
+    currentTurn: 'a', chat: [], spectatorState: null 
   };
   const duelSetupEl = document.getElementById('duel-setup');
   const duelGameEl = document.getElementById('duel-game');
@@ -699,10 +734,10 @@
     try { if (duel.conn) duel.conn.close(); } catch(e) {}
     try { if (duel.peer) duel.peer.destroy(); } catch(e) {}
     Object.assign(duel, {
-      roomCode:null, role:null, peer:null, conn:null, length:null,
+      roomCode:null, role:null, peer:null, conn:null, spectators:new Map(), length:null,
       mySecret:null, mySecretReady:false, oppSecretReady:false,
       myName:null, oppName:null, myHistory:[], theirHistory:[], winner:null,
-      currentTurn:'a', chat:[]
+      currentTurn:'a', chat:[], spectatorState:null
     });
   }
 
@@ -718,9 +753,9 @@
     const connected = !!(duel.conn && duel.conn.open);
     const dot = document.getElementById('duel-opponent-dot');
     dot.classList.toggle('ready', connected);
-    setText('duel-status-text', connected ? (duel.oppSecretReady ? `${duel.oppName || '對手'} 已就緒` : `${duel.oppName || '對手'} 已加入`) : (duel.role === 'a' ? '等待對手加入…' : '正在連線房主…'));
-    document.getElementById('duel-length-card').style.display = duel.length ? 'none' : 'block';
-    document.getElementById('duel-secret-card').style.display = duel.length && !duel.mySecretReady ? 'block' : 'none';
+    setText('duel-status-text', duel.role === 's' ? '觀戰連線中' : (connected ? (duel.oppSecretReady ? `${duel.oppName || '對手'} 已就緒` : `${duel.oppName || '對手'} 已加入`) : (duel.role === 'a' ? '等待對手加入…' : '正在連線房主…')));
+    document.getElementById('duel-length-card').style.display = duel.role === 's' ? 'none' : (duel.length ? 'none' : 'block');
+    document.getElementById('duel-secret-card').style.display = duel.role === 's' ? 'none' : (duel.length && !duel.mySecretReady ? 'block' : 'none');
     if (duel.length) {
       setText('duel-secret-label', `你的密碼（${duel.length} 位數不重複數字）`);
       const si = document.getElementById('duel-secret-input'); si.maxLength = duel.length; si.placeholder = '0'.repeat(duel.length);
@@ -728,7 +763,8 @@
     }
 
     const playing = (connected && duel.length && duel.mySecretReady && duel.oppSecretReady);
-    document.getElementById('duel-play').style.display = playing ? 'block' : 'none';
+    document.getElementById('duel-play').style.display = (duel.role === 's') ? 'none' : (playing ? 'block' : 'none');
+    document.getElementById('duel-spectator-view').style.display = duel.role === 's' ? 'block' : 'none';
 
     const topBadge = document.getElementById('duel-secret-badge-top');
     if (duel.mySecret) {
@@ -740,9 +776,11 @@
 
     renderHistory(document.getElementById('duel-my-history'), duel.myHistory, 'duel-digit-tracker');
     renderHistory(document.getElementById('duel-their-history'), duel.theirHistory);
-    renderChat(document.getElementById('duel-chat-messages'), duel.chat);
+    renderChat(document.getElementById(duel.role === 's' ? 'duel-spectator-chat-messages' : 'duel-chat-messages'), duel.chat);
 
-    const isMyTurn = (duel.currentTurn === duel.role);
+    if (duel.solvedMe && !duel.solvedOpp) duel.currentTurn = duel.role === 'a' ? 'b' : 'a';
+    else if (duel.solvedOpp && !duel.solvedMe) duel.currentTurn = duel.role;
+    const isMyTurn = (duel.currentTurn === duel.role) && !duel.solvedMe;
     const guessInput = document.getElementById('duel-guess-input');
     const guessBtn = document.getElementById('duel-guess-submit');
     const turnBanner = document.getElementById('duel-turn-banner');
@@ -763,7 +801,7 @@
       if (isMyTurn) {
         turnBanner.className = 'turn-banner turn-my';
         bannerLamp.className = 'lamp lamp-green lamp-pulse';
-        bannerText.textContent = '輪到你的回合！請輸入猜測並送出';
+        bannerText.textContent = duel.solvedOpp ? '對方已猜中你的密碼，現在由你繼續猜對方的密碼！' : '輪到你的回合！請輸入猜測並送出';
 
         turnLamp.className = 'lamp lamp-green lamp-pulse';
         turnLampText.textContent = '輪到你猜';
@@ -777,7 +815,7 @@
       } else {
         turnBanner.className = 'turn-banner turn-opp';
         bannerLamp.className = 'lamp';
-        bannerText.textContent = `等待 ${duel.oppName || '對方'} 猜測中…`;
+        bannerText.textContent = duel.solvedOpp ? `${duel.oppName || '對方'} 已猜中你的密碼，等待你繼續猜測…` : `等待 ${duel.oppName || '對方'} 猜測中…`;
 
         turnLamp.className = 'lamp';
         turnLampText.textContent = '等待對方';
@@ -792,12 +830,83 @@
     const replay = document.getElementById('duel-replay');
     if (duel.winner) {
       win.style.display = 'block';
-      win.textContent = duel.winner === 'me' ? '🎉 你贏了！你猜中了對方的密碼。' : (duel.winner === 'draw' ? '平手！雙方同時答對。' : `對方猜中你的密碼了：${duel.mySecret}`);
+      win.textContent = '🎉 雙方都已猜中密碼！本局結束。';
       replay.style.display = 'block';
     } else {
       win.style.display = 'none';
       replay.style.display = 'none';
     }
+  }
+
+  function duelSnapshot() {
+    return {
+      type:'spectatorState',
+      length:duel.length,
+      aName:duel.role === 'a' ? duel.myName : duel.oppName,
+      bName:duel.role === 'a' ? duel.oppName : duel.myName,
+      aReady:duel.role === 'a' ? duel.mySecretReady : duel.oppSecretReady,
+      bReady:duel.role === 'a' ? duel.oppSecretReady : duel.mySecretReady,
+      aHistory:duel.role === 'a' ? duel.myHistory : duel.theirHistory,
+      bHistory:duel.role === 'a' ? duel.theirHistory : duel.myHistory,
+      winner:duel.winner,
+      solvedA:duel.role === 'a' ? duel.solvedMe : duel.solvedOpp,
+      solvedB:duel.role === 'a' ? duel.solvedOpp : duel.solvedMe,
+      currentTurn:duel.currentTurn,
+      chat:duel.chat.slice(-100)
+    };
+  }
+
+  function broadcastDuelSpectators(extra, excludeId) {
+    if (duel.role !== 'a') return;
+    const data = extra || duelSnapshot();
+    duel.spectators.forEach((conn, id) => {
+      if (excludeId && id === excludeId) return;
+      if (conn.open) { try { conn.send(data); } catch(e) {} }
+      else duel.spectators.delete(id);
+    });
+  }
+
+  function renderDuelSpectator(state) {
+    if (!state) return;
+    setText('duel-spectator-a-label', state.aName || '玩家 A');
+    setText('duel-spectator-b-label', state.bName || '玩家 B');
+    const ah=document.getElementById('duel-spectator-a-history'), bh=document.getElementById('duel-spectator-b-history');
+    const ae=document.getElementById('duel-spectator-a-empty'), be=document.getElementById('duel-spectator-b-empty');
+    ah.innerHTML=''; bh.innerHTML='';
+    if (state.aHistory && state.aHistory.length) { renderHistory(ah,state.aHistory); ae.style.display='none'; } else ae.style.display='block';
+    if (state.bHistory && state.bHistory.length) { renderHistory(bh,state.bHistory); be.style.display='none'; } else be.style.display='block';
+    const turn=document.getElementById('duel-spectator-turn');
+    if (state.winner) {
+      turn.className='turn-banner turn-my';
+      turn.textContent = state.winner === 'draw' ? '平手！雙方同時答對。' : `${state.winner === 'a' ? (state.aName||'玩家 A') : (state.bName||'玩家 B')} 獲勝！`;
+    } else if (!state.aReady || !state.bReady) {
+      turn.className='turn-banner turn-opp'; turn.textContent='等待雙方設定密碼…';
+    } else if (state.solvedA && !state.solvedB) {
+      turn.className='turn-banner turn-opp'; turn.textContent = `${state.aName||'玩家 A'} 已猜中，輪到 ${state.bName||'玩家 B'} 繼續猜測`;
+    } else if (state.solvedB && !state.solvedA) {
+      turn.className='turn-banner turn-opp'; turn.textContent = `${state.bName||'玩家 B'} 已猜中，輪到 ${state.aName||'玩家 A'} 繼續猜測`;
+    } else {
+      turn.className='turn-banner turn-opp'; turn.textContent = state.currentTurn === 'a' ? `輪到 ${state.aName||'玩家 A'} 猜測` : `輪到 ${state.bName||'玩家 B'} 猜測`;
+    }
+    const win=document.getElementById('duel-spectator-win');
+    win.style.display=state.winner?'block':'none';
+    if(state.winner) win.textContent = state.winner==='draw' ? '平手！' : `🏆 ${state.winner==='a'?(state.aName||'玩家 A'):(state.bName||'玩家 B')} 獲勝！`;
+    renderChat(document.getElementById('duel-spectator-chat-messages'), state.chat || []);
+  }
+
+  function bindDuelSpectator(conn) {
+    duel.conn=conn;
+    conn.on('open',()=>{ conn.send({type:'spectatorHello', name:duel.myName}); updateDuelUI(); });
+    conn.on('data',data=>{
+      if(!data || typeof data!=='object') return;
+      if(data.type==='spectatorState'){ duel.spectatorState=data; renderDuelSpectator(data); }
+      else if(data.type==='chat'){
+        duel.chat.push({name:data.name||'玩家',text:String(data.text||'').slice(0,120),time:data.time||''});
+        renderChat(document.getElementById('duel-spectator-chat-messages'),duel.chat);
+      }
+    });
+    conn.on('close',()=>{ duel.conn=null; setText('duel-spectator-status','房主已離線，觀戰結束'); });
+    conn.on('error',()=>setText('duel-spectator-status','連線中斷，請重新加入房間'));
   }
 
   function bindDuelConnection(conn) {
@@ -808,11 +917,14 @@
     });
     conn.on('data', data => {
       if (!data || typeof data !== 'object') return;
+      if (data.type === 'role') { duel.role = data.role; if (data.role === 's') { duel.spectatorState = duel.spectatorState || null; updateDuelUI(); if (duel.spectatorState) renderDuelSpectator(duel.spectatorState); } return; }
+      if (data.type === 'spectatorState') { duel.spectatorState = data; if (duel.role === 's') renderDuelSpectator(data); return; }
+      if (data.type === 'chatHistory') { duel.chat = data.chat || []; if (duel.role === 's') renderDuelSpectator(duel.spectatorState); return; }
       if (data.type === 'config') {
         duel.length = data.length;
       } else if (data.type === 'roundReset') {
         duel.mySecret = null; duel.mySecretReady = false; duel.oppSecretReady = false;
-        duel.myHistory = []; duel.theirHistory = []; duel.winner = null; duel.currentTurn = 'a';
+        duel.myHistory = []; duel.theirHistory = []; duel.winner = null; duel.solvedMe = false; duel.solvedOpp = false; duel.currentTurn = 'a';
         document.getElementById('duel-guess-error').textContent = '';
         document.getElementById('duel-notes-text').value = '';
         setupDigitTracker('duel-digit-tracker', 'duel-notes-reset', () => updateDuelUI());
@@ -824,30 +936,37 @@
       } else if (data.type === 'secretReady') {
         duel.oppSecretReady = true;
       } else if (data.type === 'chat') {
-        duel.chat.push({name:data.name || '玩家', text:String(data.text || '').slice(0,120), time:data.time || ''});
+        if (data.playerId && ((duel.role === 'a' && data.playerId === 'a') || (duel.role === 'b' && data.playerId === duel.myName))) { updateDuelUI(); return; }
+        const msg={playerId:data.playerId || 'player', name:data.name || '玩家', text:String(data.text || '').slice(0,120), time:data.time || nowTime()};
+        duel.chat.push({name:msg.name,text:msg.text,time:msg.time});
+        if (duel.role === 'a') {
+          broadcastDuelSpectators({type:'chat',...msg});
+          if (duel.conn && duel.conn.open) { try { duel.conn.send({type:'chat',...msg}); } catch(e) {} }
+        }
       } else if (data.type === 'guess') {
         if (!duel.mySecretReady) return;
         const result = scoreGuess(duel.mySecret, data.guess);
         duel.theirHistory.push({ guess:data.guess, a:result.a, b:result.b });
-        if (result.a === duel.length) {
-          duel.winner = duel.winner === 'me' ? 'draw' : 'them';
-        }
-        conn.send({ type:'guessResult', guess:data.guess, a:result.a, b:result.b, exact:result.a === duel.length });
-        if (!duel.winner) {
-          duel.currentTurn = duel.role; 
-        }
+        const exact = result.a === duel.length;
+        if (exact) duel.solvedOpp = true;
+        conn.send({ type:'guessResult', guess:data.guess, a:result.a, b:result.b, exact, solvedOpp:duel.solvedOpp, solvedMe:duel.solvedMe });
+        if (duel.solvedMe && duel.solvedOpp) duel.winner = 'both';
+        else duel.currentTurn = duel.role;
       } else if (data.type === 'guessResult') {
         duel.myHistory.push({ guess:data.guess, a:data.a, b:data.b });
-        if (data.exact) {
-          duel.winner = duel.winner === 'them' ? 'draw' : 'me';
-        }
+        if (data.exact) duel.solvedMe = true;
+        if (data.solvedOpp) duel.solvedOpp = true;
+        if (duel.solvedMe && duel.solvedOpp) duel.winner = 'both';
+        else duel.currentTurn = 'a';
       }
       updateDuelUI();
+      if (duel.role === 'a') broadcastDuelSpectators();
     });
     conn.on('close', () => {
       duel.conn = null;
       if (!duel.winner) setText('duel-status-text', '對手已離線');
       updateDuelUI();
+      if (duel.role === 'a') broadcastDuelSpectators();
     });
     conn.on('error', () => {
       setText('duel-status-text', '連線中斷，請重新建立或加入房間');
@@ -867,6 +986,7 @@
     duel.length = n;
     if (duel.conn && duel.conn.open) duel.conn.send({type:'config', length:n});
     updateDuelUI();
+    if (duel.role === 'a') broadcastDuelSpectators();
   }
 
   function duelCreateRoom() {
@@ -885,8 +1005,28 @@
     duel.peer = new Peer(peerId);
     duel.peer.on('open', () => enterDuelGame());
     duel.peer.on('connection', conn => {
-      if (duel.conn && duel.conn.open) { conn.on('open', () => conn.close()); return; }
-      bindDuelConnection(conn);
+      if (!duel.conn || !duel.conn.open) {
+        bindDuelConnection(conn);
+        conn.on('open', () => { if (duel.conn === conn) conn.send({type:'role', role:'b'}); });
+      } else {
+        conn.on('open', () => {
+          duel.spectators.set(conn.peer, conn);
+          conn.send({type:'role', role:'s'});
+          conn.send(duelSnapshot());
+          conn.send({type:'chatHistory', chat:duel.chat.slice(-100)});
+        });
+        conn.on('data', data => {
+          if (!data || typeof data !== 'object') return;
+          if (data.type === 'chat') {
+            const msg={playerId:data.playerId||conn.peer,name:data.name||'觀戰者',text:String(data.text||'').slice(0,120),time:data.time||nowTime()};
+            duel.chat.push({name:msg.name,text:msg.text,time:msg.time});
+            broadcastDuelSpectators({type:'chat',...msg}, conn.peer);
+            if (duel.conn && duel.conn.open) { try { duel.conn.send({type:'chat',...msg}); } catch(e) {} }
+            renderChat(document.getElementById('duel-chat-messages'),duel.chat);
+          }
+        });
+        conn.on('close',()=>duel.spectators.delete(conn.peer));
+      }
     });
     duel.peer.on('error', err => {
       if (err && err.type === 'unavailable-id') { duelCreateRoom(); return; }
@@ -923,15 +1063,20 @@
   }
 
   function sendDuelChat() {
-    const input = document.getElementById('duel-chat-input');
+    const input = document.getElementById(duel.role === 's' ? 'duel-spectator-chat-input' : 'duel-chat-input');
     const text = input.value.trim();
     if (!text || !duel.conn || !duel.conn.open) return;
-    const msg = {type:'chat', name:duel.myName || '玩家', text:text.slice(0,120), time:nowTime()};
+    const msg = {type:'chat', playerId:duel.role === 'a' ? 'a' : (duel.myName || 'player'), name:duel.myName || '玩家', text:text.slice(0,120), time:nowTime()};
     duel.chat.push({name:msg.name, text:msg.text, time:msg.time});
-    duel.conn.send(msg); input.value = ''; renderChat(document.getElementById('duel-chat-messages'), duel.chat); input.focus();
+    duel.conn.send(msg);
+    if (duel.role === 'a') broadcastDuelSpectators(msg);
+    input.value = '';
+    renderChat(document.getElementById(duel.role === 's' ? 'duel-spectator-chat-messages' : 'duel-chat-messages'), duel.chat); input.focus();
   }
   document.getElementById('duel-chat-send').addEventListener('click', sendDuelChat);
   document.getElementById('duel-chat-input').addEventListener('keydown', e => { if (e.key === 'Enter') sendDuelChat(); });
+  document.getElementById('duel-spectator-chat-send').addEventListener('click', sendDuelChat);
+  document.getElementById('duel-spectator-chat-input').addEventListener('keydown', e => { if (e.key === 'Enter') sendDuelChat(); });
 
   document.getElementById('duel-create').addEventListener('click', duelCreateRoom);
   document.getElementById('duel-join').addEventListener('click', duelJoinRoom);
@@ -945,10 +1090,11 @@
     duel.mySecret = val; duel.mySecretReady = true; input.value = '';
     if (duel.conn && duel.conn.open) duel.conn.send({ type:'secretReady' });
     updateDuelUI();
+    if (duel.role === 'a') broadcastDuelSpectators();
   });
 
   function handleDuelGuessSubmit() {
-    if (duel.winner) return;
+    if (duel.winner || duel.solvedMe) return;
     const errEl = document.getElementById('duel-guess-error');
     if (duel.currentTurn !== duel.role) {
       errEl.textContent = '還沒輪到你的回合，請等待對手猜測。';
@@ -965,6 +1111,7 @@
     input.value = '';
     duel.currentTurn = (duel.role === 'a' ? 'b' : 'a'); 
     updateDuelUI();
+    if (duel.role === 'a') broadcastDuelSpectators();
   }
 
   document.getElementById('duel-guess-submit').addEventListener('click', handleDuelGuessSubmit);
@@ -972,7 +1119,7 @@
   function duelStartNextRound() {
     if (!duel.conn || !duel.conn.open || !duel.length) return;
     duel.mySecret = null; duel.mySecretReady = false; duel.oppSecretReady = false;
-    duel.myHistory = []; duel.theirHistory = []; duel.winner = null; duel.currentTurn = 'a';
+    duel.myHistory = []; duel.theirHistory = []; duel.winner = null; duel.solvedMe = false; duel.solvedOpp = false; duel.currentTurn = 'a';
     document.getElementById('duel-secret-input').value = '';
     document.getElementById('duel-guess-input').value = '';
     document.getElementById('duel-guess-error').textContent = '';
@@ -981,6 +1128,7 @@
     setupDigitTracker('duel-digit-tracker', 'duel-notes-reset', () => updateDuelUI());
     duel.conn.send({ type:'roundReset' });
     updateDuelUI();
+    if (duel.role === 'a') broadcastDuelSpectators();
     document.getElementById('duel-secret-input').focus();
   }
 
