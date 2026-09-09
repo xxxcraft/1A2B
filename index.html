@@ -184,7 +184,7 @@
 <div class="wrap">
   <header>
     <div class="title-row"><h1>1A2B</h1></div>
-    <div class="subtitle">可以單機挑戰電腦，也可跟朋友遠端對戰，或出題讓大家一起猜。多人連線模式房主需保持頁面開啟。</div>
+    <div class="subtitle">可以單機挑戰電腦，也可跟朋友遠端對戰，或出題讓大家一起猜；出題模式也可交給電腦隨機出題。多人連線模式房主需保持頁面開啟。</div>
   </header>
   <div class="tabs">
     <button class="tab active" data-tab="solo">單機模式</button>
@@ -372,7 +372,13 @@
     <div id="host-setup">
       <div class="card">
         <div class="card-label">出題模式</div>
-        <p class="desc">先選擇 3 到 9 位數，再想一組不重複數字當題目，開房間後把房號傳給朋友們，大家各自輪流猜，第一個猜中的人獲勝。</p>
+        <p class="desc">先選擇 3 到 9 位數，再選擇由你自己出題或讓電腦隨機出題。開房間後把房號傳給朋友們，大家各自猜測，第一個猜中的人獲勝。</p>
+        <div class="card-label" style="margin-top:12px;">出題方式</div>
+        <div class="row" id="host-mode-picker">
+          <button type="button" class="btn" id="host-mode-manual" style="margin-top:0;">自己出題</button>
+          <button type="button" class="btn btn-secondary" id="host-mode-computer" style="margin-top:0;">電腦出題</button>
+        </div>
+        <div class="hint" id="host-mode-hint">自己設定一組不重複數字作為題目。</div>
         <div class="card-label" style="margin-top:12px;">你的名稱</div>
         <input type="text" id="host-name-input" placeholder="輸入你的名稱" maxlength="10" autocomplete="nickname">
         <button class="btn" id="host-create">我要出題</button>
@@ -481,7 +487,7 @@
       密碼須為不重複的數字，例如 1234、0987。<br>
       單機模式：選擇 3 到 9 位數後，由電腦隨機出題，可不限次數猜到答對為止。<br>
       對戰模式：兩人各自出題3到9位數不重複數字，雙方輪流猜測對方的密碼，先全對者獲勝。<br>
-      出題模式：出題者先提供3到9位數不重複數字，其他人各自輪流猜，第一個全對的人獲勝。
+      出題模式：可選擇自己出題或電腦出題；其他玩家各自猜測，第一個全對的人獲勝。
     </div>
   </details>
 </div>
@@ -1158,7 +1164,7 @@
 
   const host = {
     roomCode:null, peer:null, conn:null, connections:new Map(), isOwner:false,
-    myId:null, myName:null, length:null, secret:null, winner:null,
+    mode:'manual', myId:null, myName:null, length:null, secret:null, winner:null,
     allGuesses:[], myHistory:[], othersHistory:[], chat:[]
   };
   const hostSetupEl = document.getElementById('host-setup');
@@ -1171,7 +1177,7 @@
     try { if (host.peer) host.peer.destroy(); } catch(e) {}
     Object.assign(host, {
       roomCode:null, peer:null, conn:null, connections:new Map(), isOwner:false,
-      myId:null, myName:null, length:null, secret:null, winner:null,
+      mode:'manual', myId:null, myName:null, length:null, secret:null, winner:null,
       allGuesses:[], myHistory:[], othersHistory:[], chat:[]
     });
   }
@@ -1199,11 +1205,14 @@
     if (!host.length) {
       lengthCard.style.display = 'block'; secretCard.style.display = 'none'; board.style.display = 'none';
       secretBadge.style.display = 'none';
-    } else if (!host.secret) {
+    } else if (!host.secret && host.mode === 'manual') {
       lengthCard.style.display = 'none'; secretCard.style.display = 'block'; board.style.display = 'none';
       secretBadge.style.display = 'none';
       setText('host-secret-label', `設定題目（${host.length} 位數不重複數字）`);
       const input = document.getElementById('host-secret-input'); input.maxLength = host.length; input.placeholder = '0'.repeat(host.length);
+    } else if (!host.secret && host.mode === 'computer') {
+      lengthCard.style.display = 'none'; secretCard.style.display = 'none'; board.style.display = 'none';
+      secretBadge.style.display = 'none';
     } else {
       lengthCard.style.display = 'none'; secretCard.style.display = 'none'; board.style.display = 'block';
       secretBadge.style.display = 'inline-flex';
@@ -1243,9 +1252,9 @@
       if (!connected) {
         status.textContent = '正在連線房主…'; card.style.display = 'none'; noteCard.style.display = 'none';
       } else if (host.secret) {
-        status.textContent = `題目已就緒（${host.length} 位），開始猜！`; card.style.display = 'block'; noteCard.style.display = 'block';
+        status.textContent = `${host.mode === 'computer' ? '電腦' : '出題者'}已準備題目（${host.length} 位），開始猜！`; card.style.display = 'block'; noteCard.style.display = 'block';
       } else if (host.length) {
-        status.textContent = `出題者正在設定 ${host.length} 位題目…`; card.style.display = 'none'; noteCard.style.display = 'none';
+        status.textContent = host.mode === 'computer' ? `電腦正在產生 ${host.length} 位題目…` : `出題者正在設定 ${host.length} 位題目…`; card.style.display = 'none'; noteCard.style.display = 'none';
       } else {
         status.textContent = '出題者尚未選擇位數…'; card.style.display = 'none'; noteCard.style.display = 'none';
       }
@@ -1289,7 +1298,7 @@
     host.peer.on('connection', conn => {
       conn.on('open', () => {
         host.connections.set(conn.peer, conn);
-        conn.send({type:'config', length:host.length, ready:!!host.secret, winner:host.winner});
+        conn.send({type:'config', length:host.length, ready:!!host.secret, winner:host.winner, mode:host.mode});
         host.chat.forEach(msg => conn.send({type:'chat', ...msg}));
       });
       conn.on('data', data => {
@@ -1324,7 +1333,10 @@
 
   function hostChooseLength(n) {
     host.length = n; host.secret = null; host.winner = null; host.allGuesses = [];
-    broadcastHost({type:'config', length:n, ready:false, winner:null});
+    if (host.mode === 'computer') {
+      host.secret = generateUniqueSecret(n);
+    }
+    broadcastHost({type:'config', length:n, ready:!!host.secret, winner:null, mode:host.mode});
     updateHostOwnerUI();
   }
 
@@ -1346,7 +1358,7 @@
         if (!data || typeof data !== 'object') return;
         if (data.type === 'config') {
           const wasRoundReset = !data.ready && !data.winner;
-          host.length = data.length; host.secret = data.ready ? true : null; host.winner = data.winner || null;
+          host.length = data.length; host.secret = data.ready ? true : null; host.winner = data.winner || null; host.mode = data.mode || 'manual';
           if (wasRoundReset) {
             host.myHistory = []; host.othersHistory = [];
             document.getElementById('host-guess-error').textContent = '';
@@ -1393,17 +1405,30 @@
   document.getElementById('host-owner-chat-input').addEventListener('keydown', e => { if (e.key === 'Enter') sendHostChat(true); });
   document.getElementById('host-guesser-chat-input').addEventListener('keydown', e => { if (e.key === 'Enter') sendHostChat(false); });
 
+  document.getElementById('host-mode-manual').addEventListener('click', () => {
+    host.mode = 'manual';
+    document.getElementById('host-mode-manual').classList.remove('btn-secondary');
+    document.getElementById('host-mode-computer').classList.add('btn-secondary');
+    document.getElementById('host-mode-hint').textContent = '自己設定一組不重複數字作為題目。';
+  });
+  document.getElementById('host-mode-computer').addEventListener('click', () => {
+    host.mode = 'computer';
+    document.getElementById('host-mode-computer').classList.remove('btn-secondary');
+    document.getElementById('host-mode-manual').classList.add('btn-secondary');
+    document.getElementById('host-mode-hint').textContent = '由電腦隨機產生不重複數字，其他玩家負責猜題。';
+  });
   document.getElementById('host-create').addEventListener('click', hostCreateRoom);
   document.getElementById('host-join').addEventListener('click', hostJoinRoom);
 
   function hostStartNextRound() {
     if (!host.isOwner || !host.length) return;
-    host.secret = null; host.winner = null; host.allGuesses = [];
-    broadcastHost({type:'config', length:host.length, ready:false, winner:null});
+    host.secret = host.mode === 'computer' ? generateUniqueSecret(host.length) : null;
+    host.winner = null; host.allGuesses = [];
+    broadcastHost({type:'config', length:host.length, ready:!!host.secret, winner:null, mode:host.mode});
     updateHostOwnerUI();
     document.getElementById('host-secret-input').value = '';
     document.getElementById('host-secret-error').textContent = '';
-    document.getElementById('host-secret-input').focus();
+    if (host.mode === 'manual') document.getElementById('host-secret-input').focus();
   }
 
   document.getElementById('host-replay').addEventListener('click', hostStartNextRound);
@@ -1411,8 +1436,9 @@
   document.getElementById('host-secret-submit').addEventListener('click', () => {
     const input = document.getElementById('host-secret-input'), errEl = document.getElementById('host-secret-error'), val = input.value.trim(); errEl.textContent = '';
     if (!host.length || !isValidCode(val, host.length)) { errEl.textContent = `請輸入 ${host.length||4} 位不重複的數字。`; return; }
+    if (host.mode !== 'manual') return;
     host.secret = val; host.winner = null; host.allGuesses = []; input.value = '';
-    broadcastHost({type:'config', length:host.length, ready:true, winner:null});
+    broadcastHost({type:'config', length:host.length, ready:true, winner:null, mode:host.mode});
     updateHostOwnerUI();
   });
 
@@ -1432,6 +1458,10 @@
     document.getElementById('host-length-card').style.display = 'block'; document.getElementById('host-secret-card').style.display = 'none'; document.getElementById('host-owner-board').style.display = 'none';
     document.getElementById('host-secret-badge-wrap').style.display = 'none';
     document.getElementById('host-length-picker').innerHTML = ''; document.getElementById('host-length-error').textContent = '';
+    host.mode = 'manual';
+    document.getElementById('host-mode-manual').classList.remove('btn-secondary');
+    document.getElementById('host-mode-computer').classList.add('btn-secondary');
+    document.getElementById('host-mode-hint').textContent = '自己設定一組不重複數字作為題目。';
     document.getElementById('host-secret-input').maxLength = 4; document.getElementById('host-secret-input').placeholder = '0000';
     document.getElementById('host-guess-input').maxLength = 4; document.getElementById('host-guess-input').placeholder = '0000';
     document.getElementById('host-owner-history').innerHTML = ''; document.getElementById('host-my-history').innerHTML = ''; document.getElementById('host-others-history').innerHTML = '';
