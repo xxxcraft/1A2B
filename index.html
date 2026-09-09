@@ -153,6 +153,18 @@
     border-radius: 3px; resize: vertical; min-height: 60px; outline: none; box-sizing: border-box;
   }
   .note-textarea:focus { border-color: var(--brass-bright); }
+  .chat-card { margin-top: 14px; }
+  .chat-messages { height: 220px; overflow-y: auto; background: var(--ink); border: 1px solid var(--line); border-radius: 3px; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+  .chat-empty { text-align: center; color: #55585f; font-size: 13px; padding: 82px 8px; }
+  .chat-message { padding: 7px 9px; border: 1px solid var(--line); border-radius: 3px; background: var(--ink-soft); }
+  .chat-message-head { display: flex; align-items: center; gap: 7px; margin-bottom: 3px; }
+  .chat-name { color: var(--brass-bright); font-size: 12px; font-weight: 700; }
+  .chat-time { color: #55585f; font-size: 10px; margin-left: auto; }
+  .chat-text { color: var(--paper); font-size: 13px; line-height: 1.5; white-space: pre-wrap; word-break: break-word; }
+  .chat-input-row { display: flex; gap: 8px; margin-top: 8px; }
+  .chat-input-row input { flex: 1; text-align: left; letter-spacing: 0; font-family: inherit; font-size: 14px; padding: 9px 10px; }
+  .chat-input-row .btn { width: auto; margin-top: 0; padding: 9px 16px; }
+  @media (max-width: 600px) { .chat-messages { height: 180px; } }
 
   @media (max-width: 600px) {
     .wrap { padding: 20px 12px 48px; }
@@ -308,6 +320,14 @@
             </div>
           </div>
         </div>
+        <div class="card chat-card">
+          <div class="card-label">💬 聊天室</div>
+          <div class="chat-messages" id="duel-chat-messages"><div class="chat-empty">尚無留言</div></div>
+          <div class="chat-input-row">
+            <input type="text" id="duel-chat-input" maxlength="120" placeholder="輸入留言…" autocomplete="off">
+            <button class="btn" id="duel-chat-send">送出</button>
+          </div>
+        </div>
       </div>
       <button class="btn btn-danger" id="duel-leave" style="margin-top:8px;">離開房間</button>
     </div>
@@ -363,6 +383,14 @@
         <div class="history" id="host-owner-history"></div>
         <div class="empty-state" id="host-owner-empty">尚未有人猜題</div>
       </div>
+      <div class="card chat-card">
+        <div class="card-label">💬 聊天室</div>
+        <div class="chat-messages" id="host-owner-chat-messages"><div class="chat-empty">尚無留言</div></div>
+        <div class="chat-input-row">
+          <input type="text" id="host-owner-chat-input" maxlength="120" placeholder="輸入留言…" autocomplete="off">
+          <button class="btn" id="host-owner-chat-send">送出</button>
+        </div>
+      </div>
       <button class="btn btn-danger" id="host-owner-leave" style="margin-top:8px;">結束並離開</button>
     </div>
     <div id="host-guesser-view" style="display:none;">
@@ -398,6 +426,14 @@
         <div class="card-label">其他人的猜測</div>
         <div class="history" id="host-others-history"></div>
         <div class="empty-state" id="host-others-empty">尚未有人猜測過</div>
+      </div>
+      <div class="card chat-card">
+        <div class="card-label">💬 聊天室</div>
+        <div class="chat-messages" id="host-guesser-chat-messages"><div class="chat-empty">尚無留言</div></div>
+        <div class="chat-input-row">
+          <input type="text" id="host-guesser-chat-input" maxlength="120" placeholder="輸入留言…" autocomplete="off">
+          <button class="btn" id="host-guesser-chat-send">送出</button>
+        </div>
       </div>
       <button class="btn btn-danger" id="host-guesser-leave" style="margin-top:8px;">離開房間</button>
     </div>
@@ -479,6 +515,20 @@
   function renderOthersHistory(el, list) {
     if (!list || list.length === 0) { el.innerHTML = ''; return; }
     el.innerHTML = list.map((g, i) => renderOtherGuessRow(i + 1, g.name, g.guess, g.a, g.b)).join('');
+  }
+
+  function renderChat(el, list) {
+    if (!el) return;
+    if (!list || list.length === 0) {
+      el.innerHTML = '<div class="chat-empty">尚無留言</div>';
+      return;
+    }
+    el.innerHTML = list.map(m => `<div class="chat-message"><div class="chat-message-head"><span class="chat-name">${escapeHtml(m.name || '玩家')}</span><span class="chat-time">${escapeHtml(m.time || '')}</span></div><div class="chat-text">${escapeHtml(m.text)}</div></div>`).join('');
+    el.scrollTop = el.scrollHeight;
+  }
+
+  function nowTime() {
+    return new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
   }
 
   function setText(id, text) { document.getElementById(id).textContent = text; }
@@ -640,7 +690,7 @@
     roomCode: null, role: null, peer: null, conn: null,
     length: null, mySecret: null, mySecretReady: false, oppSecretReady: false,
     myName: null, oppName: null, myHistory: [], theirHistory: [], winner: null,
-    currentTurn: 'a' 
+    currentTurn: 'a', chat: [] 
   };
   const duelSetupEl = document.getElementById('duel-setup');
   const duelGameEl = document.getElementById('duel-game');
@@ -652,7 +702,7 @@
       roomCode:null, role:null, peer:null, conn:null, length:null,
       mySecret:null, mySecretReady:false, oppSecretReady:false,
       myName:null, oppName:null, myHistory:[], theirHistory:[], winner:null,
-      currentTurn:'a'
+      currentTurn:'a', chat:[]
     });
   }
 
@@ -690,6 +740,7 @@
 
     renderHistory(document.getElementById('duel-my-history'), duel.myHistory, 'duel-digit-tracker');
     renderHistory(document.getElementById('duel-their-history'), duel.theirHistory);
+    renderChat(document.getElementById('duel-chat-messages'), duel.chat);
 
     const isMyTurn = (duel.currentTurn === duel.role);
     const guessInput = document.getElementById('duel-guess-input');
@@ -772,6 +823,8 @@
         if (duel.mySecretReady) conn.send({ type:'secretReady' });
       } else if (data.type === 'secretReady') {
         duel.oppSecretReady = true;
+      } else if (data.type === 'chat') {
+        duel.chat.push({name:data.name || '玩家', text:String(data.text || '').slice(0,120), time:data.time || ''});
       } else if (data.type === 'guess') {
         if (!duel.mySecretReady) return;
         const result = scoreGuess(duel.mySecret, data.guess);
@@ -869,6 +922,17 @@
     });
   }
 
+  function sendDuelChat() {
+    const input = document.getElementById('duel-chat-input');
+    const text = input.value.trim();
+    if (!text || !duel.conn || !duel.conn.open) return;
+    const msg = {type:'chat', name:duel.myName || '玩家', text:text.slice(0,120), time:nowTime()};
+    duel.chat.push({name:msg.name, text:msg.text, time:msg.time});
+    duel.conn.send(msg); input.value = ''; renderChat(document.getElementById('duel-chat-messages'), duel.chat); input.focus();
+  }
+  document.getElementById('duel-chat-send').addEventListener('click', sendDuelChat);
+  document.getElementById('duel-chat-input').addEventListener('keydown', e => { if (e.key === 'Enter') sendDuelChat(); });
+
   document.getElementById('duel-create').addEventListener('click', duelCreateRoom);
   document.getElementById('duel-join').addEventListener('click', duelJoinRoom);
 
@@ -947,7 +1011,7 @@
   const host = {
     roomCode:null, peer:null, conn:null, connections:new Map(), isOwner:false,
     myId:null, myName:null, length:null, secret:null, winner:null,
-    allGuesses:[], myHistory:[], othersHistory:[]
+    allGuesses:[], myHistory:[], othersHistory:[], chat:[]
   };
   const hostSetupEl = document.getElementById('host-setup');
   const hostOwnerViewEl = document.getElementById('host-owner-view');
@@ -960,7 +1024,7 @@
     Object.assign(host, {
       roomCode:null, peer:null, conn:null, connections:new Map(), isOwner:false,
       myId:null, myName:null, length:null, secret:null, winner:null,
-      allGuesses:[], myHistory:[], othersHistory:[]
+      allGuesses:[], myHistory:[], othersHistory:[], chat:[]
     });
   }
 
@@ -1002,6 +1066,7 @@
     const replay = document.getElementById('host-replay');
     replay.style.display = host.winner ? 'block' : 'none';
 
+    renderChat(document.getElementById('host-owner-chat-messages'), host.chat);
     const hist = document.getElementById('host-owner-history'), empty = document.getElementById('host-owner-empty');
     if (!host.allGuesses.length) {
       hist.innerHTML = ''; empty.style.display = 'block';
@@ -1050,6 +1115,7 @@
       myEmpty.style.display = 'block'; my.innerHTML = '';
     }
 
+    renderChat(document.getElementById('host-guesser-chat-messages'), host.chat);
     const oth = document.getElementById('host-others-history'), othEmpty = document.getElementById('host-others-empty');
     if (host.othersHistory.length) {
       othEmpty.style.display = 'none';
@@ -1076,9 +1142,17 @@
       conn.on('open', () => {
         host.connections.set(conn.peer, conn);
         conn.send({type:'config', length:host.length, ready:!!host.secret, winner:host.winner});
+        host.chat.forEach(msg => conn.send({type:'chat', ...msg}));
       });
       conn.on('data', data => {
         if (!data || typeof data !== 'object') return;
+        if (data.type === 'chat') {
+          const msg = {name:String(data.name || '玩家').slice(0,10), text:String(data.text || '').slice(0,120), time:String(data.time || nowTime())};
+          host.chat.push(msg);
+          broadcastHost({type:'chat', ...msg});
+          updateHostOwnerUI();
+          return;
+        }
         if (data.type === 'guess') {
           if (!host.secret || host.winner || !isValidCode(data.guess, host.length)) return;
           const r = scoreGuess(host.secret, data.guess);
@@ -1131,6 +1205,8 @@
             document.getElementById('host-notes-text').value = '';
             setupDigitTracker('host-digit-tracker', 'host-notes-reset', () => updateHostGuesserUI());
           }
+        } else if (data.type === 'chat') {
+          host.chat.push({name:data.name || '玩家', text:String(data.text || '').slice(0,120), time:data.time || ''});
         } else if (data.type === 'guessResult') {
           host.myHistory.push({guess:data.guess, a:data.a, b:data.b});
         } else if (data.type === 'guessBroadcast' && data.playerId !== host.myId) {
@@ -1146,6 +1222,28 @@
     });
     host.peer.on('error', err => { if (err && (err.type === 'peer-unavailable' || err.type === 'network')) setText('host-guesser-status', '找不到房間或網路連線失敗'); });
   }
+
+  function sendHostChat(isOwner) {
+    const prefix = isOwner ? 'host-owner' : 'host-guesser';
+    const input = document.getElementById(prefix + '-chat-input');
+    const text = input.value.trim();
+    if (!text) return;
+    const msg = {type:'chat', name:host.myName || '玩家', text:text.slice(0,120), time:nowTime()};
+    if (isOwner) {
+      host.chat.push({name:msg.name, text:msg.text, time:msg.time});
+      broadcastHost(msg);
+      updateHostOwnerUI();
+    } else if (host.conn && host.conn.open) {
+      host.chat.push({name:msg.name, text:msg.text, time:msg.time});
+      host.conn.send(msg);
+      updateHostGuesserUI();
+    } else return;
+    input.value = ''; input.focus();
+  }
+  document.getElementById('host-owner-chat-send').addEventListener('click', () => sendHostChat(true));
+  document.getElementById('host-guesser-chat-send').addEventListener('click', () => sendHostChat(false));
+  document.getElementById('host-owner-chat-input').addEventListener('keydown', e => { if (e.key === 'Enter') sendHostChat(true); });
+  document.getElementById('host-guesser-chat-input').addEventListener('keydown', e => { if (e.key === 'Enter') sendHostChat(false); });
 
   document.getElementById('host-create').addEventListener('click', hostCreateRoom);
   document.getElementById('host-join').addEventListener('click', hostJoinRoom);
