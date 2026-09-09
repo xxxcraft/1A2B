@@ -216,6 +216,7 @@
           <div class="card-label" id="solo-guess-label">輸入你的猜測</div>
           <input type="text" id="solo-guess-input" inputmode="numeric" maxlength="4" placeholder="0000" autocomplete="off">
           <button class="btn" id="solo-guess-submit">送出猜測</button>
+          <button class="btn btn-secondary" id="solo-reveal-answer">公布答案</button>
           <div class="error-msg" id="solo-guess-error"></div>
           <div class="history" id="solo-history" style="margin-top:14px;"></div>
           <div class="empty-state" id="solo-empty">尚未猜測</div>
@@ -446,6 +447,7 @@
         </div>
       </div>
       <div id="host-win" style="display:none;" class="win-banner"></div>
+      <button class="btn btn-secondary" id="host-reveal-answer" style="display:none; margin-bottom:12px;">公布答案</button>
       <button class="btn" id="host-replay" style="display:none; margin-bottom:12px;">再出一題（保留房間）</button>
       <div class="card" id="host-guess-card" style="display:none;">
         <div class="card-label" id="host-guess-label">輸入你的猜測</div>
@@ -557,9 +559,13 @@
     el.innerHTML = list.map((g, i) => renderGuessRow(i + 1, g.guess, g.a, g.b, eliminated)).join('');
   }
 
-  function renderOthersHistory(el, list) {
+  function renderOthersHistory(el, list, trackerId) {
     if (!list || list.length === 0) { el.innerHTML = ''; return; }
-    el.innerHTML = list.map((g, i) => renderOtherGuessRow(i + 1, g.name, g.guess, g.a, g.b)).join('');
+    const eliminated = trackerId ? getEliminatedDigits(trackerId) : new Set();
+    el.innerHTML = list.map((g, i) => {
+      const row = renderOtherGuessRow(i + 1, g.name, g.guess, g.a, g.b);
+      return trackerId ? row.replace(/<span class="guess-value digits">.*?<\/span>/, `<span class="guess-value digits">${renderGuessDigits(g.guess, eliminated)}</span>`) : row;
+    }).join('');
   }
 
   function renderChat(el, list) {
@@ -641,7 +647,7 @@
     });
   });
 
-  const solo = { length:null, secret:null, history:[], won:false };
+  const solo = { length:null, secret:null, history:[], won:false, answerRevealed:false };
   const soloSetupEl = document.getElementById('solo-setup');
   const soloGameEl = document.getElementById('solo-game');
 
@@ -678,22 +684,27 @@
     input.placeholder = '0'.repeat(solo.length || 4);
     setText('solo-guess-label', `請輸入你的猜測（${solo.length} 位）`);
     setText('solo-length-badge', `${solo.length} 位數`);
-    setText('solo-status-text', solo.won ? '挑戰完成' : `電腦已出好 ${solo.length} 位數題目`);
+    setText('solo-status-text', solo.won ? '挑戰完成' : (solo.answerRevealed ? '答案已公布' : `電腦已出好 ${solo.length} 位數題目`));
     renderHistory(document.getElementById('solo-history'), solo.history, 'solo-digit-tracker');
     document.getElementById('solo-empty').style.display = solo.history.length ? 'none' : 'block';
     if (solo.won) {
       win.style.display = 'block';
       win.textContent = `🎉 猜中了！答案是 ${solo.secret}，總共猜了 ${solo.history.length} 次。`;
       input.disabled = true; submit.disabled = true;
+    } else if (solo.answerRevealed) {
+      win.style.display = 'block';
+      win.textContent = `🔓 答案已公布：${solo.secret}`;
+      input.disabled = true; submit.disabled = true;
     } else {
       win.style.display = 'none'; input.disabled = false; submit.disabled = false;
     }
+    document.getElementById('solo-reveal-answer').disabled = solo.won || solo.answerRevealed;
   }
 
   function startSoloGame(keepLength=true) {
     if (!solo.length) return;
     solo.secret = generateUniqueSecret(solo.length);
-    solo.history = []; solo.won = false;
+    solo.history = []; solo.won = false; solo.answerRevealed = false;
     soloSetupEl.style.display = 'none'; soloGameEl.style.display = 'block';
     document.getElementById('solo-guess-input').value = '';
     document.getElementById('solo-guess-error').textContent = '';
@@ -704,7 +715,7 @@
   }
 
   function handleSoloGuessSubmit() {
-    if (!solo.secret || solo.won) return;
+    if (!solo.secret || solo.won || solo.answerRevealed) return;
     const input = document.getElementById('solo-guess-input');
     const err = document.getElementById('solo-guess-error');
     const val = input.value.trim(); err.textContent = '';
@@ -724,8 +735,13 @@
   document.getElementById('solo-start').addEventListener('click', () => startSoloGame());
   document.getElementById('solo-guess-submit').addEventListener('click', handleSoloGuessSubmit);
   document.getElementById('solo-new-game').addEventListener('click', () => startSoloGame());
+  document.getElementById('solo-reveal-answer').addEventListener('click', () => {
+    if (!solo.secret || solo.won) return;
+    solo.answerRevealed = true;
+    updateSoloUI();
+  });
   document.getElementById('solo-leave').addEventListener('click', () => {
-    solo.secret = null; solo.history = []; solo.won = false;
+    solo.secret = null; solo.history = []; solo.won = false; solo.answerRevealed = false;
     soloGameEl.style.display = 'none'; soloSetupEl.style.display = 'block';
     document.getElementById('solo-start').disabled = !solo.length;
   });
@@ -1169,7 +1185,7 @@
   const host = {
     roomCode:null, peer:null, conn:null, connections:new Map(), isOwner:false, mode:'manual',
     myId:null, myName:null, length:null, secret:null, winner:null,
-    allGuesses:[], myHistory:[], othersHistory:[], chat:[]
+    allGuesses:[], myHistory:[], othersHistory:[], chat:[], answerRevealed:false
   };
   const hostSetupEl = document.getElementById('host-setup');
   const hostOwnerViewEl = document.getElementById('host-owner-view');
@@ -1203,7 +1219,7 @@
     Object.assign(host, {
       roomCode:null, peer:null, conn:null, connections:new Map(), isOwner:false, mode:'manual',
       myId:null, myName:null, length:null, secret:null, winner:null,
-      allGuesses:[], myHistory:[], othersHistory:[], chat:[]
+      allGuesses:[], myHistory:[], othersHistory:[], chat:[], answerRevealed:false
     });
   }
 
@@ -1298,7 +1314,7 @@
     const oth = document.getElementById('host-others-history'), othEmpty = document.getElementById('host-others-empty');
     if (host.othersHistory.length) {
       othEmpty.style.display = 'none';
-      renderOthersHistory(oth, host.othersHistory);
+      renderOthersHistory(oth, host.othersHistory, 'host-digit-tracker');
     } else {
       othEmpty.style.display = 'block'; oth.innerHTML = '';
     }
@@ -1322,12 +1338,14 @@
       conn.on('open', () => {
         host.connections.set(conn.peer, conn);
         conn.send({type:'config', length:host.length, ready:!!host.secret, winner:host.winner});
+        if (host.answerRevealed && host.secret) conn.send({type:'answerRevealed', answer:host.secret});
         host.chat.forEach(msg => conn.send({type:'chat', ...msg}));
       });
       conn.on('data', data => {
         if (!data || typeof data !== 'object') return;
         if (data.type === 'chat') {
-          const msg = {name:String(data.name || '玩家').slice(0,10), text:String(data.text || '').slice(0,120), time:String(data.time || nowTime())};
+          if (data.playerId && data.playerId === host.myId) return;
+          const msg = {playerId:data.playerId || conn.peer, name:String(data.name || '玩家').slice(0,10), text:String(data.text || '').slice(0,120), time:String(data.time || nowTime())};
           host.chat.push(msg);
           broadcastHost({type:'chat', ...msg});
           if (host.mode === 'auto') updateHostGuesserUI(); else updateHostOwnerUI();
@@ -1356,7 +1374,7 @@
   }
 
   function hostChooseLength(n) {
-    host.length = n; host.winner = null; host.allGuesses = [];
+    host.length = n; host.winner = null; host.allGuesses = []; host.answerRevealed = false; host.revealedAnswer = null;
     if (host.mode === 'auto') {
       host.secret = generateUniqueSecret(n);
       host.myHistory = []; host.othersHistory = [];
@@ -1396,7 +1414,7 @@
         if (!data || typeof data !== 'object') return;
         if (data.type === 'config') {
           const wasRoundReset = !data.ready && !data.winner;
-          host.length = data.length; host.secret = data.ready ? true : null; host.winner = data.winner || null;
+          host.length = data.length; host.secret = data.ready ? true : null; host.winner = data.winner || null; host.answerRevealed = false; host.revealedAnswer = null;
           if (wasRoundReset) {
             host.myHistory = []; host.othersHistory = [];
             document.getElementById('host-guess-error').textContent = '';
@@ -1427,7 +1445,7 @@
     const input = document.getElementById(prefix + '-chat-input');
     const text = input.value.trim();
     if (!text) return;
-    const msg = {type:'chat', name:host.myName || '玩家', text:text.slice(0,120), time:nowTime()};
+    const msg = {type:'chat', playerId:host.myId, name:host.myName || '玩家', text:text.slice(0,120), time:nowTime()};
     if (isOwner) {
       host.chat.push({name:msg.name, text:msg.text, time:msg.time});
       broadcastHost(msg);
@@ -1470,11 +1488,18 @@
   }
 
   document.getElementById('host-replay').addEventListener('click', hostStartNextRound);
+  document.getElementById('host-reveal-answer').addEventListener('click', () => {
+    if (!host.isOwner || host.mode !== 'auto' || !host.secret || host.winner || host.answerRevealed) return;
+    host.answerRevealed = true;
+    host.revealedAnswer = host.secret;
+    broadcastHost({type:'answerRevealed', answer:host.secret});
+    updateHostGuesserUI();
+  });
 
   document.getElementById('host-secret-submit').addEventListener('click', () => {
     const input = document.getElementById('host-secret-input'), errEl = document.getElementById('host-secret-error'), val = input.value.trim(); errEl.textContent = '';
     if (!host.length || !isValidCode(val, host.length)) { errEl.textContent = `請輸入 ${host.length||4} 位不重複的數字。`; return; }
-    host.secret = val; host.winner = null; host.allGuesses = []; input.value = '';
+    host.secret = val; host.winner = null; host.allGuesses = []; host.answerRevealed = false; host.revealedAnswer = null; input.value = '';
     broadcastHost({type:'config', length:host.length, ready:true, winner:null});
     updateHostOwnerUI();
   });
@@ -1482,6 +1507,7 @@
   function handleHostGuessSubmit() {
     const input = document.getElementById('host-guess-input'), errEl = document.getElementById('host-guess-error'), val = input.value.trim(); errEl.textContent = '';
     if (!host.length || !host.secret) { errEl.textContent = '題目尚未設定。'; return; }
+    if (host.answerRevealed) { errEl.textContent = '答案已公布，本局結束。'; return; }
     if (!isValidCode(val, host.length)) { errEl.textContent = `請輸入 ${host.length} 位數不重複的數字。`; return; }
     if (host.winner) { errEl.textContent = '已經有人猜中了。'; return; }
     if (host.isOwner) {
@@ -1514,6 +1540,7 @@
     document.getElementById('host-win').style.display = 'none'; document.getElementById('host-secret-input').value = ''; document.getElementById('host-guess-input').value = '';
     document.getElementById('host-notes-text').value = '';
     document.getElementById('host-guesser-share-row').style.display = 'none';
+    document.getElementById('host-reveal-answer').style.display = 'none';
     hostSetupMode = 'manual';
     document.querySelectorAll('#host-mode-picker .length-btn').forEach(b => b.classList.toggle('selected', b.dataset.mode === 'manual'));
     document.getElementById('host-create').textContent = '開始遊戲';
