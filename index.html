@@ -154,8 +154,8 @@
 <body>
 <div class="wrap">
   <header>
-    <div class="title-row"><h1>1A2B 數字密碼</h1></div>
-    <div class="subtitle">可以單機挑戰電腦，也可跟朋友雙人對戰，或多人（10位以內）一起線上猜題搶答。連線模式請房主保持頁面開啟。</div>
+    <div class="title-row"><h1>1A2B</h1></div>
+    <div class="subtitle">可以單機挑戰電腦，也可跟朋友雙人對戰，或多人一起線上猜題搶答。連線模式請房主保持頁面開啟。</div>
   </header>
   <div class="tabs">
     <button class="tab active" data-tab="solo">單機模式</button>
@@ -891,7 +891,7 @@
         if (data.exact) duel.solvedMe = true;
         if (data.solvedOpp) duel.solvedOpp = true;
         if (duel.solvedMe && duel.solvedOpp) duel.winner = 'both';
-        else duel.currentTurn = 'a';
+        else duel.currentTurn = (duel.role === 'a' ? 'b' : 'a');
       }
       updateDuelUI();
     });
