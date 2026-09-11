@@ -67,6 +67,9 @@
   .guess-row { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--ink); border: 1px solid var(--line); border-radius: 3px; }
   .guess-num { color: #6a6d75; font-size: 12px; width: 26px; flex-shrink: 0; font-family: monospace; }
   .guess-value { font-size: 18px; flex: 1; }
+  .guess-digit { cursor: pointer; display: inline-block; padding: 0 1px; user-select: none; }
+  .guess-digit:hover { text-decoration: underline; }
+  .guess-digit.selected { font-weight: 900; }
   .guess-result { font-size: 14px; font-weight: 700; white-space: nowrap; }
   .result-a { color: var(--hit-a); }
   .result-b { color: var(--hit-b); }
@@ -155,7 +158,7 @@
 <div class="wrap">
   <header>
     <div class="title-row"><h1>1A2B</h1></div>
-    <div class="subtitle">可以單機挑戰電腦，也可跟朋友雙人對戰，或多人一起線上猜題搶答。連線模式請房主保持頁面開啟。</div>
+    <div class="subtitle">可以單機挑戰電腦，也可跟朋友雙人對戰，或多人（10位以內）一起線上猜題搶答。連線模式請房主保持頁面開啟。</div>
   </header>
   <div class="tabs">
     <button class="tab active" data-tab="solo">單機模式</button>
@@ -216,9 +219,10 @@
         <p class="desc">建立房間後，把房號傳給朋友即可開始雙方互猜對戰。</p>
         <div class="card-label" style="margin-top:12px;">你的名稱</div>
         <input type="text" id="duel-name-input" placeholder="輸入你的名稱" maxlength="10" autocomplete="nickname">
+        <input type="text" id="duel-create-code" placeholder="房主自訂5碼房號（英數）" maxlength="5" style="margin-top:10px; letter-spacing:0.2em; font-size:16px; text-transform:uppercase;">
         <div class="row"><button class="btn" id="duel-create">建立新房間</button></div>
         <div class="row" style="margin-top:12px;">
-          <input type="text" id="duel-join-code" placeholder="輸入房號加入" maxlength="8" style="letter-spacing:0.2em; font-size:16px;">
+          <input type="text" id="duel-join-code" placeholder="輸入5碼房號加入" maxlength="5" style="letter-spacing:0.2em; font-size:16px;">
           <button class="btn btn-secondary" id="duel-join" style="margin-top:0; flex:0 0 auto; width:auto; padding:0 18px;">加入</button>
         </div>
         <div class="error-msg" id="duel-setup-error"></div>
@@ -353,9 +357,10 @@
         <p class="desc" id="host-mode-desc" style="margin-bottom:16px;">房主自訂一組密碼，玩家們一起搶答，房主可即時觀看所有玩家猜測過程。</p>
         <div class="card-label">你的名稱</div>
         <input type="text" id="host-name-input" placeholder="輸入你的暱稱" maxlength="10" autocomplete="nickname">
+        <input type="text" id="host-create-code" placeholder="房主自訂5碼房號（英數）" maxlength="5" style="margin-top:10px; letter-spacing:0.2em; font-size:16px; text-transform:uppercase;">
         <button class="btn" id="host-create">開始遊戲</button>
         <div class="row" style="margin-top:14px;">
-          <input type="text" id="host-join-code" placeholder="輸入房號加入" maxlength="8" style="letter-spacing:0.2em; font-size:16px;">
+          <input type="text" id="host-join-code" placeholder="輸入5碼房號加入" maxlength="5" style="letter-spacing:0.2em; font-size:16px;">
           <button class="btn btn-secondary" id="host-join" style="margin-top:0; flex:0 0 auto; width:auto; padding:0 18px;">加入遊戲</button>
         </div>
         <div class="error-msg" id="host-setup-error"></div>
@@ -512,7 +517,9 @@
     return { a, b };
   }
 
-  function randomRoomCode() {
+  function isValidRoomCode(code) { return /^[A-Z0-9]{5}$/.test(String(code || '').toUpperCase()); }
+
+function randomRoomCode() {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
     let s = '';
     for (let i = 0; i < 5; i++) s += chars[Math.floor(Math.random() * chars.length)];
@@ -560,6 +567,15 @@
     }).join('');
   }
 
+  function addChatMessage(list, msg) {
+    if (!msg || !list) return false;
+    const id = String(msg.id || '');
+    const duplicate = id ? list.some(m => String(m.id || '') === id) : list.some(m => m.playerId === msg.playerId && m.text === msg.text && m.time === msg.time);
+    if (duplicate) return false;
+    list.push(msg);
+    return true;
+  }
+
   function renderChat(el, list) {
     if (!el) return;
     if (!list || list.length === 0) {
@@ -602,6 +618,12 @@
     if (errEl) errEl.textContent = '無法載入 PeerJS 網路套件，請重新整理頁面。';
     return false;
   }
+
+  document.addEventListener('click', e => {
+    const digit = e.target.closest('.guess-digit');
+    if (!digit) return;
+    digit.classList.toggle('selected');
+  });
 
   function setupDigitTracker(containerId, resetBtnId, onChange) {
     const container = document.getElementById(containerId);
@@ -876,7 +898,7 @@
       } else if (data.type === 'secretReady') {
         duel.oppSecretReady = true;
       } else if (data.type === 'chat') {
-        duel.chat.push({name:data.name || '玩家', text:String(data.text || '').slice(0,120), time:data.time || nowTime()});
+        addChatMessage(duel.chat, {id:data.id || '', playerId:data.playerId || null, name:data.name || '玩家', text:String(data.text || '').slice(0,120), time:data.time || nowTime()});
       } else if (data.type === 'guess') {
         if (!duel.mySecretReady) return;
         const result = scoreGuess(duel.mySecret, data.guess);
@@ -924,7 +946,10 @@
     duelResetState();
     duel.myName = name;
     renderDuelLengthPicker();
-    duel.roomCode = randomRoomCode(); duel.role = 'a'; duel.currentTurn = 'a'; 
+    const roomInput = document.getElementById('duel-create-code');
+    const customCode = roomInput ? roomInput.value.trim().toUpperCase() : '';
+    if (!isValidRoomCode(customCode)) { errEl.textContent = '房號必須是5碼，只能使用英文字母與數字。'; return; }
+    duel.roomCode = customCode; duel.role = 'a'; duel.currentTurn = 'a'; 
     duel.peer = new Peer(PEER_PREFIX + 'duel-' + duel.roomCode);
     duel.peer.on('open', () => enterDuelGame());
     duel.peer.on('connection', conn => {
@@ -936,7 +961,7 @@
       }
     });
     duel.peer.on('error', err => {
-      if (err && err.type === 'unavailable-id') { duelCreateRoom(); return; }
+      if (err && err.type === 'unavailable-id') { errEl.textContent = '此房號已被使用，請換一組5碼房號。'; return; }
       errEl.textContent = '建立對戰房間失敗，請再試一次。';
     });
   }
@@ -944,7 +969,7 @@
   function duelJoinRoom() {
     const code = document.getElementById('duel-join-code').value.trim().toUpperCase();
     const errEl = document.getElementById('duel-setup-error'); errEl.textContent = '';
-    if (!code) { errEl.textContent = '請輸入房號。'; return; }
+    if (!isValidRoomCode(code)) { errEl.textContent = '房號必須是5碼，只能使用英文字母與數字。'; return; }
     if (!peerAvailable(errEl)) return;
     const name = document.getElementById('duel-name-input').value.trim();
     if (!name) { errEl.textContent = '請先輸入你的名稱。'; return; }
@@ -963,8 +988,8 @@
     const input = document.getElementById(duel.role === 's' ? 'duel-spectator-chat-input' : 'duel-chat-input');
     const text = input.value.trim();
     if (!text || !duel.conn || !duel.conn.open) return;
-    const msg = {type:'chat', name:duel.myName || '玩家', text:text.slice(0,120), time:nowTime()};
-    duel.chat.push(msg);
+    const msg = {type:'chat', id:randomPlayerId(), playerId:duel.myId || null, name:duel.myName || '玩家', text:text.slice(0,120), time:nowTime()};
+    addChatMessage(duel.chat, msg);
     duel.conn.send(msg);
     input.value = '';
     renderChat(document.getElementById(duel.role === 's' ? 'duel-spectator-chat-messages' : 'duel-chat-messages'), duel.chat);
@@ -1198,7 +1223,10 @@
     if (!name) { errEl.textContent = '請先輸入你的暱稱。'; nameInput.focus(); return; }
     
     hostResetState(); 
-    host.isOwner = true; host.myName = name; host.myId = randomPlayerId(); host.roomCode = randomRoomCode();
+    const roomInput = document.getElementById('host-create-code');
+    const customCode = roomInput ? roomInput.value.trim().toUpperCase() : '';
+    if (!isValidRoomCode(customCode)) { errEl.textContent = '房號必須是5碼，只能使用英文字母與數字。'; return; }
+    host.isOwner = true; host.myName = name; host.myId = randomPlayerId(); host.roomCode = customCode;
     host.mode = hostSetupMode;
     
     host.peer = new Peer(PEER_PREFIX + 'host-' + host.roomCode);
@@ -1245,9 +1273,9 @@
       conn.on('data', data => {
         if (!data || typeof data !== 'object') return;
         if (data.type === 'chat') {
-          const msg = {playerId:data.playerId || conn.peer, name:String(data.name || '玩家').slice(0,10), text:String(data.text || '').slice(0,120), time:String(data.time || nowTime())};
-          host.chat.push(msg);
-          broadcastHost({type:'chat', ...msg});
+          const msg = {type:'chat', id:data.id || randomPlayerId(), playerId:data.playerId || conn.peer, name:String(data.name || '玩家').slice(0,10), text:String(data.text || '').slice(0,120), time:String(data.time || nowTime())};
+          if (!addChatMessage(host.chat, msg)) return;
+          broadcastHost(msg);
           if (host.mode === 'auto') updateHostGuesserUI(); else updateHostOwnerUI();
           return;
         }
@@ -1275,13 +1303,14 @@
     });
 
     host.peer.on('error', err => {
-      if (err && err.type === 'unavailable-id') { hostCreateRoom(); return; }
+      if (err && err.type === 'unavailable-id') { errEl.textContent = '此房號已被使用，請換一組5碼房號。'; return; }
       errEl.textContent = '建立多人房間失敗，請再試一次。';
     });
   }
 
   function hostChooseLength(n) {
-    host.length = n; host.winner = null; host.allGuesses = []; host.answerRevealed = false;
+    host.length = n; host.winner = null; host.allGuesses = []; host.myHistory = []; host.othersHistory = []; host.answerRevealed = false;
+    broadcastHost({type:'roundReset'});
     if (host.mode === 'auto') {
       host.secret = generateUniqueSecret(n);
       host.myHistory = []; host.othersHistory = [];
@@ -1297,7 +1326,7 @@
   function hostJoinRoom() {
     const code = document.getElementById('host-join-code').value.trim().toUpperCase();
     const errEl = document.getElementById('host-setup-error'); errEl.textContent = '';
-    if (!code) { errEl.textContent = '請輸入房號。'; return; }
+    if (!isValidRoomCode(code)) { errEl.textContent = '房號必須是5碼，只能使用英文字母與數字。'; return; }
     if (!peerAvailable(errEl)) return;
     const nameInput = document.getElementById('host-name-input');
     const name = nameInput.value.trim();
@@ -1327,7 +1356,12 @@
           resetHostUI();
           return;
         }
-        if (data.type === 'config') {
+        if (data.type === 'roundReset') {
+          host.myHistory = []; host.othersHistory = []; host.winner = null; host.answerRevealed = false;
+          document.getElementById('host-guess-error').textContent = '';
+          document.getElementById('host-notes-text').value = '';
+          setupDigitTracker('host-digit-tracker', 'host-notes-reset', () => updateHostGuesserUI());
+        } else if (data.type === 'config') {
           const wasRoundReset = !data.ready && !data.winner;
           host.length = data.length; 
           host.secret = data.ready ? true : null; 
@@ -1343,7 +1377,7 @@
           host.answerRevealed = true;
           host.secret = data.answer;
         } else if (data.type === 'chat') {
-          host.chat.push({name:data.name || '玩家', text:String(data.text || '').slice(0,120), time:data.time || ''});
+          addChatMessage(host.chat, {id:data.id || '', playerId:data.playerId || null, name:data.name || '玩家', text:String(data.text || '').slice(0,120), time:data.time || ''});
         } else if (data.type === 'guessResult') {
           host.myHistory.push({guess:data.guess, a:data.a, b:data.b});
         } else if (data.type === 'guessBroadcast' && data.playerId !== host.myId) {
@@ -1381,13 +1415,13 @@
     const text = input.value.trim();
     if (!text) return;
 
-    const msg = {type:'chat', playerId:host.myId, name:host.myName || '玩家', text:text.slice(0,120), time:nowTime()};
+    const msg = {type:'chat', id:randomPlayerId(), playerId:host.myId, name:host.myName || '玩家', text:text.slice(0,120), time:nowTime()};
     if (isOwner) {
-      host.chat.push({name:msg.name, text:msg.text, time:msg.time});
+      addChatMessage(host.chat, msg);
       broadcastHost(msg);
       if (host.mode === 'auto') updateHostGuesserUI(); else updateHostOwnerUI();
     } else if (host.conn && host.conn.open) {
-      host.chat.push({name:msg.name, text:msg.text, time:msg.time});
+      addChatMessage(host.chat, msg);
       host.conn.send(msg);
       updateHostGuesserUI();
     } else return;
@@ -1405,7 +1439,8 @@
 
   function hostStartNextRound() {
     if (!host.isOwner || !host.length) return;
-    host.winner = null; host.allGuesses = []; host.answerRevealed = false;
+    host.winner = null; host.allGuesses = []; host.myHistory = []; host.othersHistory = []; host.answerRevealed = false;
+    broadcastHost({type:'roundReset'});
     if (host.mode === 'auto') {
       host.secret = generateUniqueSecret(host.length);
       host.myHistory = []; host.othersHistory = [];
@@ -1436,7 +1471,7 @@
   document.getElementById('host-secret-submit').addEventListener('click', () => {
     const input = document.getElementById('host-secret-input'), errEl = document.getElementById('host-secret-error'), val = input.value.trim(); errEl.textContent = '';
     if (!host.length || !isValidCode(val, host.length)) { errEl.textContent = `請輸入 ${host.length||4} 位不重複數字。`; return; }
-    host.secret = val; host.winner = null; host.allGuesses = []; host.answerRevealed = false; input.value = '';
+    host.secret = val; host.winner = null; host.allGuesses = []; host.myHistory = []; host.othersHistory = []; host.answerRevealed = false; input.value = '';
     broadcastHost({type:'config', length:host.length, ready:true, winner:null, mode:'manual'});
     updateHostOwnerUI();
   });
